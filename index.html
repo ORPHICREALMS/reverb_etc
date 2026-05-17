@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffb6e1">
+<title>▲ TAPE.FM v22 ▲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ──────────────────────────────────────────────── */
+:root {
+  --pink-50: #fff0f8; --pink-100: #ffd9ec; --pink-200: #ffb6e1;
+  --pink-300: #ff99cc; --pink-400: #ff66b2; --pink-500: #ff1493;
+  --pink-600: #c71585; --pink-shadow: #87366d;
+  --cyan: #80ffff; --cyan-dim: #40c8c8; --cyan-dark: #006666;
+  --black: #0a0a0a; --white: #ffffff;
+  --bevel-light: #ffffff; --bevel-dark: #6b3057;
+  --win-bg: #ffd9ec; --inset-light: #ffe5f3; --inset-dark: #b87aa3;
+  --title-grad: linear-gradient(90deg,#ff1493 0%,#ff66b2 50%,#ff99cc 100%);
+}
+
+/* ── RESET ───────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  font-family:'VT323',monospace;color:var(--black);
+  overscroll-behavior-y:none;
+  background-color:var(--pink-200);
+  background-image:conic-gradient(from 0deg at 50% 50%,rgba(0,0,0,0.15) 0% 25%,rgba(255,255,255,0.5) 0% 50%,rgba(0,0,0,0.15) 0% 75%,rgba(255,255,255,0.5) 0% 100%);
+  background-size:24px 24px;background-attachment:fixed;
+  min-height:100dvh;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+/* ── DECO KANA ───────────────────────────────────────────── */
+.deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;font-family:'DotGothic16',monospace}
+.deco span{position:absolute;color:rgba(199,21,133,0.12);font-size:32px;user-select:none;animation:drift 20s linear infinite}
+.deco span:nth-child(1){top:5%;left:78%;animation-delay:-2s}
+.deco span:nth-child(2){top:28%;left:-4%;animation-delay:-9s}
+.deco span:nth-child(3){top:60%;left:86%;animation-delay:-4s}
+.deco span:nth-child(4){top:82%;left:8%;animation-delay:-15s}
+.deco span:nth-child(5){top:45%;left:48%;animation-delay:-7s}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(4deg)}}
+
+/* ── APP SHELL ───────────────────────────────────────────── */
+.app{position:relative;z-index:1;width:100%;max-width:480px;margin:0 auto;padding-bottom:40px}
+
+/* ── TITLEBAR ────────────────────────────────────────────── */
+.titlebar{background:var(--title-grad);display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:2px solid var(--black);box-shadow:0 2px 0 var(--black)}
+.titlebar-left{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--white);text-shadow:1px 1px 0 var(--pink-shadow);letter-spacing:.5px}
+.titlebar-right{font-family:'DotGothic16',monospace;font-size:13px;color:rgba(255,255,255,.85)}
+
+/* ── SCOPE ───────────────────────────────────────────────── */
+.scope-wrap{background:var(--black);border-bottom:2px solid var(--black);position:relative;height:130px}
+.scope-wrap canvas{width:100%;height:100%;display:block}
+.scope-scanlines{position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,180,225,.04) 2px,rgba(255,180,225,.04) 3px)}
+.scope-label{position:absolute;top:6px;left:10px;font-family:'Press Start 2P',monospace;font-size:6px;color:var(--pink-300);letter-spacing:1px;text-shadow:0 0 6px var(--pink-500)}
+.scope-time{position:absolute;bottom:8px;right:10px;font-family:'VT323',monospace;font-size:22px;color:var(--cyan);letter-spacing:2px;text-shadow:0 0 8px var(--cyan),0 0 16px var(--cyan-dim)}
+.scope-status{position:absolute;top:6px;right:10px;display:flex;align-items:center;gap:6px;font-family:'Press Start 2P',monospace;font-size:6px;color:var(--pink-300)}
+.led{width:8px;height:8px;border-radius:50%;background:#444;border:1px solid var(--black);box-shadow:inset 1px 1px 0 rgba(255,255,255,.3)}
+.led.on{background:var(--cyan);box-shadow:0 0 6px var(--cyan),0 0 12px var(--cyan-dim)}
+.led.rec{background:var(--pink-500);box-shadow:0 0 8px var(--pink-500),0 0 16px #ff006688;animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── VIDEO PREVIEW ───────────────────────────────────────── */
+.video-preview{display:none;background:var(--black);border-bottom:2px solid var(--black);position:relative;max-height:120px;overflow:hidden}
+.video-preview.show{display:block}
+.video-preview video{width:100%;height:100%;max-height:120px;object-fit:contain;display:block}
+.video-preview-label{position:absolute;top:4px;left:8px;font-family:'Press Start 2P',monospace;font-size:5px;color:var(--cyan);text-shadow:0 0 4px var(--cyan);letter-spacing:.5px}
+.video-preview-dur{position:absolute;bottom:4px;right:8px;font-family:'VT323',monospace;font-size:14px;color:var(--cyan);text-shadow:0 0 4px var(--cyan)}
+
+/* ── TRANSPORT ───────────────────────────────────────────── */
+.transport{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px;background:var(--win-bg);border-bottom:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark)}
+.btn{background:var(--pink-100);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark),2px 2px 0 var(--black);color:var(--black);padding:10px 4px 8px;font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:.5px;cursor:pointer;transition:all .08s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;user-select:none;min-height:58px;text-transform:uppercase}
+.btn:active,.btn.active{box-shadow:inset -1px -1px 0 var(--bevel-light),inset 1px 1px 0 var(--bevel-dark),0 0 0 var(--black);transform:translate(2px,2px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark),2px 2px 0 var(--black)}
+.btn-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.btn-icon svg{width:100%;height:100%}
+.btn.rec{background:#ffcce0}
+.btn.rec .btn-icon{color:var(--pink-600)}
+.btn.rec.active{background:var(--pink-500);color:var(--white)}
+.btn.rec.active .btn-icon{color:var(--white)}
+.btn.play .btn-icon{color:var(--cyan-dim)}
+.btn.play.active{background:#d0fff8}
+.btn.stop .btn-icon{color:var(--pink-shadow)}
+.btn.clear .btn-icon{color:#888}
+.btn.save-btn{background:#e8d0ff}
+.btn.save-btn .btn-icon{color:#7b3fe4}
+
+/* ── IMPORT ROW ──────────────────────────────────────────── */
+.import-row{padding:6px 8px;background:var(--win-bg);border-bottom:2px solid var(--black);display:flex;gap:6px}
+.import-btn{flex:1;background:var(--inset-light);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark),2px 2px 0 var(--black);color:var(--pink-shadow);padding:10px 8px;font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .08s;text-transform:uppercase}
+.import-btn:active{transform:translate(2px,2px);box-shadow:inset -1px -1px 0 var(--bevel-light),inset 1px 1px 0 var(--bevel-dark),0 0 0 var(--black)}
+.import-filename{font-family:'VT323',monospace;font-size:13px;color:var(--pink-shadow);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+
+/* ── SECTION LABEL ───────────────────────────────────────── */
+.section-label{font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1.5px;color:var(--pink-shadow);padding:8px 10px 4px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--pink-400);opacity:.5}
+
+/* ── FX GRID ─────────────────────────────────────────────── */
+.fx-grid{display:flex;flex-direction:column;gap:0;padding:0 10px 10px}
+.fx{background:var(--white);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--inset-dark);margin-bottom:6px;overflow:hidden}
+.fx.on{border-color:var(--pink-500);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--pink-600),0 0 0 1px var(--pink-400)}
+.fx-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;user-select:none;background:var(--inset-light);border-bottom:1px solid var(--pink-300)}
+.fx.on .fx-head{background:linear-gradient(90deg,#ffd9ec,#ffe5f3)}
+.fx-name{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--black);letter-spacing:.5px}
+.fx.on .fx-name{color:var(--pink-600)}
+.fx-meta{font-family:'VT323',monospace;font-size:13px;color:var(--inset-dark);margin-top:2px}
+.toggle{position:relative;width:42px;height:22px;background:#ccc;border:2px solid var(--black);box-shadow:inset 1px 1px 0 rgba(0,0,0,.2);cursor:pointer;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:1px;left:1px;width:16px;height:16px;background:var(--white);border:1px solid var(--black);transition:left .15s}
+.fx.on .toggle{background:var(--pink-500)}
+.fx.on .toggle::after{left:21px;background:var(--cyan)}
+.fx-body{padding:10px;display:none;background:var(--win-bg);border-top:1px dashed var(--pink-300)}
+.fx.on .fx-body{display:block}
+
+/* ── KNOBS ───────────────────────────────────────────────── */
+.knobs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.knob-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.knob-label{font-family:'Press Start 2P',monospace;font-size:5px;color:var(--pink-shadow);text-transform:uppercase;letter-spacing:.5px}
+.knob-val{font-family:'VT323',monospace;font-size:14px;color:var(--pink-500);min-height:14px}
+.knob{width:54px;height:54px;position:relative;cursor:ns-resize;touch-action:none;overflow:visible}
+.knob-base{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--pink-100),var(--pink-400) 70%);border:2px solid var(--black);box-shadow:2px 2px 0 var(--black),inset 1px 1px 0 rgba(255,255,255,.6)}
+.knob-indicator{position:absolute;top:50%;left:50%;width:2px;height:20px;background:var(--black);transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);border-radius:2px;z-index:2}
+.knob-arc{display:block;image-rendering:crisp-edges}
+
+/* ── PILLS ───────────────────────────────────────────────── */
+.pill-row{display:flex;gap:3px;margin-top:10px;background:var(--inset-light);padding:3px;border:1px solid var(--pink-300)}
+.pill{flex:1;background:transparent;border:1px solid transparent;color:var(--pink-shadow);padding:6px 3px;font-family:'VT323',monospace;font-size:13px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .1s}
+.pill.active{background:var(--pink-500);color:var(--white);border-color:var(--pink-600)}
+
+/* ── SAVE FX BTN ─────────────────────────────────────────── */
+.save-fx-btn{background:var(--pink-500);border:2px solid var(--black);box-shadow:2px 2px 0 var(--black);color:var(--white);padding:3px 8px;font-family:'Press Start 2P',monospace;font-size:6px;cursor:pointer;letter-spacing:.5px;margin-left:4px;transition:all .08s}
+.save-fx-btn:active{transform:translate(2px,2px);box-shadow:0 0 0}
+
+/* ── PRESETS ─────────────────────────────────────────────── */
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:4px 10px 10px}
+.preset{background:var(--white);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--inset-dark),2px 2px 0 var(--black);color:var(--pink-shadow);padding:9px 4px;font-family:'VT323',monospace;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .08s;user-select:none}
+.preset:active{transform:translate(2px,2px);box-shadow:inset -1px -1px 0 var(--bevel-light),inset 1px 1px 0 var(--inset-dark),0 0 0 var(--black)}
+.preset.active{background:var(--pink-500);color:var(--white);border-color:var(--pink-600);box-shadow:inset 1px 1px 0 rgba(255,255,255,.4),inset -1px -1px 0 var(--pink-600),2px 2px 0 var(--black);font-family:'Press Start 2P',monospace;font-size:6px;padding:11px 4px}
+
+/* ── USER PRESETS ────────────────────────────────────────── */
+.user-presets{display:flex;flex-direction:column;gap:5px;padding:0 10px 10px}
+.user-preset-row{display:flex;align-items:center;gap:6px;background:var(--white);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--inset-dark);padding:7px 8px}
+.user-preset-name{flex:1;font-family:'VT323',monospace;font-size:16px;color:var(--pink-shadow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.user-preset-name:hover{color:var(--pink-500)}
+.user-preset-del{background:transparent;border:1px solid var(--pink-400);color:var(--pink-500);font-family:'Press Start 2P',monospace;font-size:6px;padding:3px 5px;cursor:pointer}
+.user-preset-del:active{background:var(--pink-500);color:var(--white)}
+
+/* ── EXPORT BUTTONS ──────────────────────────────────────── */
+.export-row{padding:4px 10px 4px}
+.download{width:100%;padding:14px;background:var(--pink-500);border:2px solid var(--black);box-shadow:3px 3px 0 var(--black);font-family:'Press Start 2P',monospace;font-size:8px;color:var(--white);letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .08s;display:flex;align-items:center;justify-content:center;gap:10px}
+.download:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--black)}
+.download:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--black)}
+.download.cyan{background:var(--cyan);color:var(--black);margin-top:6px}
+.download.cyan:hover{background:#60efef}
+
+/* ── MSG BAR ─────────────────────────────────────────────── */
+.msg{margin:6px 10px 8px;padding:8px 10px;background:var(--white);border:2px solid var(--black);box-shadow:inset 1px 1px 0 var(--bevel-dark),inset -1px -1px 0 var(--bevel-light);font-family:'VT323',monospace;font-size:15px;color:var(--pink-shadow);text-align:center}
+
+/* ── MODAL ───────────────────────────────────────────────── */
+.modal-back{display:none;position:fixed;inset:0;background:rgba(20,0,15,.6);backdrop-filter:blur(2px);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-back.show{display:flex}
+.modal{width:100%;max-width:320px;background:var(--win-bg);border:2px solid var(--black);box-shadow:4px 4px 0 var(--black)}
+.modal-title{background:var(--title-grad);color:var(--white);padding:7px 10px;font-family:'Press Start 2P',monospace;font-size:7px;border-bottom:2px solid var(--black);display:flex;justify-content:space-between;align-items:center;text-shadow:1px 1px 0 var(--pink-shadow)}
+.modal-close{cursor:pointer;font-size:16px;line-height:1}
+.modal-body{padding:14px}
+.modal-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--pink-shadow);margin-bottom:10px}
+.modal-body input[type="text"]{width:100%;padding:8px;margin-bottom:12px;font-family:'VT323',monospace;font-size:18px;border:2px solid var(--black);background:var(--white);box-shadow:inset 2px 2px 0 var(--inset-dark);color:var(--black);text-transform:uppercase;outline:none}
+.modal-body input[type="text"]:focus{outline:2px solid var(--pink-500);outline-offset:-2px}
+.btn-row-modal{display:flex;gap:6px}
+.modal-btn{flex:1;padding:10px;background:var(--pink-100);border:2px solid var(--black);box-shadow:2px 2px 0 var(--black);font-family:'Press Start 2P',monospace;font-size:7px;cursor:pointer;transition:all .08s;text-transform:uppercase}
+.modal-btn:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.modal-btn.primary{background:var(--pink-500);color:var(--white);border-color:var(--pink-600)}
+
+/* ── TOAST ───────────────────────────────────────────────── */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--win-bg);border:2px solid var(--black);box-shadow:3px 3px 0 var(--black);padding:8px 14px;font-family:'VT323',monospace;font-size:16px;color:var(--pink-shadow);z-index:200;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer{text-align:center;padding:12px;font-family:'DotGothic16',monospace;font-size:11px;color:var(--pink-shadow);opacity:.7}
+input,select{font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="deco" aria-hidden="true">
+  <span>テープ</span><span>未来</span><span>音楽</span><span>夢</span><span>▲▼▲</span>
+</div>
+
+<div class="app">
+
+  <!-- TITLEBAR -->
+  <div class="titlebar">
+    <span class="titlebar-left">▲ TAPE.FM v22</span>
+    <span class="titlebar-right">録音スタジオ</span>
+  </div>
+
+  <!-- SCOPE -->
+  <div class="scope-wrap">
+    <canvas id="scope"></canvas>
+    <div class="scope-scanlines"></div>
+    <div class="scope-label">SIGNAL</div>
+    <div class="scope-time" id="timeDisplay">00:00.0</div>
+    <div class="scope-status">
+      <span id="statusText">READY</span>
+      <span class="led on" id="statusLed"></span>
+    </div>
+  </div>
+
+  <!-- VIDEO PREVIEW (shown when video loaded) -->
+  <div class="video-preview" id="videoPreview">
+    <video id="videoEl" muted playsinline webkit-playsinline></video>
+    <div class="video-preview-label">VIDEO SOURCE — TAP TO UNLOCK</div>
+    <div class="video-preview-dur" id="videoDur"></div>
+  </div>
+
+  <!-- TRANSPORT -->
+  <div class="transport">
+    <button class="btn rec" id="recBtn">
+      <span class="btn-icon"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg></span>
+      <span id="recLabel">REC</span>
+    </button>
+    <button class="btn play" id="playBtn" disabled>
+      <span class="btn-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8V4z"/></svg></span>
+      <span>PLAY</span>
+    </button>
+    <button class="btn stop" id="stopBtn" disabled>
+      <span class="btn-icon"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="1"/></svg></span>
+      <span>STOP</span>
+    </button>
+    <button class="btn clear" id="clearBtn" disabled>
+      <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></span>
+      <span>CLR</span>
+    </button>
+    <button class="btn save-btn" id="saveBtn" disabled>
+      <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span>
+      <span>SAVE</span>
+    </button>
+  </div>
+
+  <!-- IMPORT ROW -->
+  <div class="import-row">
+    <button class="import-btn" id="importBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      IMPORT AUDIO / VIDEO
+    </button>
+    <span class="import-filename" id="importFilename"></span>
+  </div>
+  <input type="file" id="fileInput" accept="audio/*,video/*,.mp4,.mov,.webm,.mp3,.wav,.ogg,.m4a,.aac" style="display:none">
+
+  <!-- FX CHAIN -->
+  <div class="section-label">fx chain <button class="save-fx-btn" id="saveFxBtn">＋ SAVE FX</button></div>
+  <div class="fx-grid" id="fxGrid">
+
+    <!-- PITCH -->
+    <div class="fx" data-fx="pitch">
+      <div class="fx-head"><div><div class="fx-name">PITCH</div><div class="fx-meta">±24 semitones · varispeed</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="pitch.semi" data-min="-24" data-max="24" data-step="1" data-default="0"></div><div class="knob-label">Semitones</div><div class="knob-val">+0</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="pitch.fine" data-min="-100" data-max="100" data-step="1" data-default="0"></div><div class="knob-label">Fine</div><div class="knob-val">+0</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="pitch.formant" data-min="0.1" data-max="2" data-step="0.01" data-default="1"></div><div class="knob-label">Speed</div><div class="knob-val">1.00x</div></div>
+      </div></div>
+    </div>
+
+    <!-- DRIVE -->
+    <div class="fx" data-fx="dist">
+      <div class="fx-head"><div><div class="fx-name">DRIVE</div><div class="fx-meta">Saturation · overdrive</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="dist.amount" data-min="0" data-max="100" data-step="1" data-default="20"></div><div class="knob-label">Amount</div><div class="knob-val">20</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="dist.tone" data-min="200" data-max="8000" data-step="50" data-default="3000"></div><div class="knob-label">Tone</div><div class="knob-val">3000</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="dist.mix" data-min="0" data-max="1" data-step="0.01" data-default="0.7"></div><div class="knob-label">Mix</div><div class="knob-val">70%</div></div>
+      </div></div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="fx" data-fx="filter">
+      <div class="fx-head"><div><div class="fx-name">FILTER</div><div class="fx-meta">Sweepable resonant filter</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="filter.cutoff" data-min="80" data-max="18000" data-step="50" data-default="2000" data-curve="log"></div><div class="knob-label">Cutoff</div><div class="knob-val">2000</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="filter.q" data-min="0.1" data-max="20" data-step="0.1" data-default="1"></div><div class="knob-label">Reso</div><div class="knob-val">1.0</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="filter.lfo" data-min="0" data-max="10" data-step="0.1" data-default="0"></div><div class="knob-label">Wobble</div><div class="knob-val">0.0</div></div>
+      </div>
+      <div class="pill-row" data-param-group="filter.type">
+        <button class="pill active" data-val="lowpass">LP</button>
+        <button class="pill" data-val="highpass">HP</button>
+        <button class="pill" data-val="bandpass">BP</button>
+      </div></div>
+    </div>
+
+    <!-- RADIO -->
+    <div class="fx" data-fx="radio">
+      <div class="fx-head"><div><div class="fx-name">RADIO</div><div class="fx-meta">Telephone · AM · bitcrush · static</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="radio.bandwidth" data-min="400" data-max="8000" data-step="50" data-default="3200" data-curve="log"></div><div class="knob-label">Bandwidth</div><div class="knob-val">3200</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="radio.crunch" data-min="3" data-max="16" data-step="1" data-default="12"></div><div class="knob-label">Crunch</div><div class="knob-val">12bit</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="radio.static" data-min="0" data-max="0.12" data-step="0.002" data-default="0.02"></div><div class="knob-label">Static</div><div class="knob-val">2%</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="radio.hum" data-min="0" data-max="0.08" data-step="0.001" data-default="0"></div><div class="knob-label">Hum</div><div class="knob-val">0%</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="radio.dist" data-min="0" data-max="80" data-step="1" data-default="10"></div><div class="knob-label">Grit</div><div class="knob-val">10</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="radio.mix" data-min="0" data-max="1" data-step="0.01" data-default="1"></div><div class="knob-label">Mix</div><div class="knob-val">100%</div></div>
+      </div></div>
+    </div>
+
+    <!-- CHORUS -->
+    <div class="fx" data-fx="chorus">
+      <div class="fx-head"><div><div class="fx-name">CHORUS</div><div class="fx-meta">Modulated doubling</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="chorus.rate" data-min="0.1" data-max="6" data-step="0.05" data-default="1.5"></div><div class="knob-label">Rate</div><div class="knob-val">1.5Hz</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="chorus.depth" data-min="0" data-max="0.02" data-step="0.0005" data-default="0.005"></div><div class="knob-label">Depth</div><div class="knob-val">5ms</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="chorus.mix" data-min="0" data-max="1" data-step="0.01" data-default="0.5"></div><div class="knob-label">Mix</div><div class="knob-val">50%</div></div>
+      </div></div>
+    </div>
+
+    <!-- DELAY -->
+    <div class="fx" data-fx="delay">
+      <div class="fx-head"><div><div class="fx-name">DELAY</div><div class="fx-meta">Echo with feedback</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="delay.time" data-min="0.01" data-max="1.5" data-step="0.01" data-default="0.3"></div><div class="knob-label">Time</div><div class="knob-val">300ms</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="delay.feedback" data-min="0" data-max="0.92" data-step="0.01" data-default="0.4"></div><div class="knob-label">Feedback</div><div class="knob-val">40%</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="delay.mix" data-min="0" data-max="1" data-step="0.01" data-default="0.35"></div><div class="knob-label">Mix</div><div class="knob-val">35%</div></div>
+      </div></div>
+    </div>
+
+    <!-- REVERB A -->
+    <div class="fx" data-fx="reverb">
+      <div class="fx-head"><div><div class="fx-name">REVERB A</div><div class="fx-meta">Convolution · space one</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="reverb.size" data-min="0.1" data-max="6" data-step="0.1" data-default="2"></div><div class="knob-label">Size</div><div class="knob-val">2.0s</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="reverb.decay" data-min="0.5" data-max="6" data-step="0.1" data-default="2"></div><div class="knob-label">Decay</div><div class="knob-val">2.0</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="reverb.mix" data-min="0" data-max="1" data-step="0.01" data-default="0.4"></div><div class="knob-label">Mix</div><div class="knob-val">40%</div></div>
+      </div>
+      <div class="pill-row" data-param-group="reverb.preset">
+        <button class="pill" data-val="room">Room</button>
+        <button class="pill active" data-val="hall">Hall</button>
+        <button class="pill" data-val="cathedral">Church</button>
+        <button class="pill" data-val="plate">Plate</button>
+      </div></div>
+    </div>
+
+    <!-- REVERB B -->
+    <div class="fx" data-fx="reverb2">
+      <div class="fx-head"><div><div class="fx-name">REVERB B</div><div class="fx-meta">Convolution · space two</div></div><div class="toggle"></div></div>
+      <div class="fx-body"><div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-param="reverb2.size" data-min="0.1" data-max="8" data-step="0.1" data-default="3.5"></div><div class="knob-label">Size</div><div class="knob-val">3.5s</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="reverb2.decay" data-min="0.5" data-max="8" data-step="0.1" data-default="3.5"></div><div class="knob-label">Decay</div><div class="knob-val">3.5</div></div>
+        <div class="knob-wrap"><div class="knob" data-param="reverb2.mix" data-min="0" data-max="1" data-step="0.01" data-default="0.25"></div><div class="knob-label">Mix</div><div class="knob-val">25%</div></div>
+      </div>
+      <div class="pill-row" data-param-group="reverb2.preset">
+        <button class="pill" data-val="room">Room</button>
+        <button class="pill" data-val="hall">Hall</button>
+        <button class="pill" data-val="cathedral">Church</button>
+        <button class="pill active" data-val="plate">Plate</button>
+      </div></div>
+    </div>
+
+  </div><!-- /fx-grid -->
+
+  <!-- PRESETS (below FX chain) -->
+  <div class="section-label">presets</div>
+  <div class="presets" id="presets">
+    <button class="preset" data-preset="dry">Dry</button>
+    <button class="preset" data-preset="vocal">Vocal</button>
+    <button class="preset" data-preset="lofi">Lo-Fi</button>
+    <button class="preset" data-preset="cathedral">Cathedral</button>
+    <button class="preset" data-preset="robot">Robot</button>
+    <button class="preset" data-preset="dreamy">Dreamy</button>
+    <button class="preset" data-preset="phone">Phone</button>
+    <button class="preset" data-preset="radio">Radio</button>
+    <button class="preset" data-preset="tape">Tape</button>
+  </div>
+
+  <!-- USER SAVED PRESETS -->
+  <div id="userPresetsSection" style="display:none">
+    <div class="section-label">saved presets</div>
+    <div class="user-presets" id="userPresetsList"></div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="export-row">
+    <button class="download" id="downloadBtn" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      <span id="downloadLabel">▼ BOUNCE TO WAV</span>
+    </button>
+    <button class="download cyan" id="exportVideoBtn" disabled style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M10 9l6 3-6 3V9z"/></svg>
+      <span id="exportVideoLabel">▼ EXPORT VIDEO</span>
+    </button>
+  </div>
+
+  <div class="msg" id="msg">tap REC or IMPORT · FX bake into the export</div>
+  <footer>▲ tape.fm v7 · real-time fx · video export · no servers · 録音 ▲</footer>
+</div>
+
+<!-- SAVE FX MODAL -->
+<div class="modal-back" id="saveFxModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>💾 SAVE FX PRESET</span>
+      <span class="modal-close" id="saveFxClose">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label">NAME YOUR PRESET:</div>
+      <input type="text" id="presetNameInput" placeholder="MY DREAM REVERB" maxlength="28" autocomplete="off">
+      <div class="btn-row-modal">
+        <button class="modal-btn" id="saveFxCancel">CANCEL</button>
+        <button class="modal-btn primary" id="saveFxConfirm">SAVE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- hidden canvas for video export -->
+<canvas id="exportCanvas" style="display:none"></canvas>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── RESOURCE CACHE (pre-computed, reused across plays) ────
+const cache = {
+  noiseBuf:  null,
+  impulseA:  null, impA_key: '',
+  impulseB:  null, impB_key: '',
+};
+
+function getCachedNoise(ctx) {
+  if (!cache.noiseBuf || cache.noiseBuf.sampleRate !== ctx.sampleRate) {
+    const sr = ctx.sampleRate;
+    // Stereo with independent L/R channels — sounds more realistic than upmixed mono
+    const b = ctx.createBuffer(2, sr * 30, sr);
+    for(let ch=0;ch<2;ch++){
+      const d = b.getChannelData(ch);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    cache.noiseBuf = b;
+  }
+  return cache.noiseBuf;
+}
+
+function getCachedImpulse(ctx, size, decay, preset, which) {
+  const key = `${size}_${decay}_${preset}`;
+  if (which === 'A') {
+    if (cache.impulseA && cache.impA_key === key && cache.impulseA.sampleRate === ctx.sampleRate) return cache.impulseA;
+    cache.impulseA = generateImpulse(ctx, size, decay, preset);
+    cache.impA_key = key;
+    return cache.impulseA;
+  } else {
+    if (cache.impulseB && cache.impB_key === key && cache.impulseB.sampleRate === ctx.sampleRate) return cache.impulseB;
+    cache.impulseB = generateImpulse(ctx, size, decay, preset);
+    cache.impB_key = key;
+    return cache.impulseB;
+  }
+}
+
+function invalidateImpulse(which) {
+  if (which === 'A') cache.impA_key = '';
+  else cache.impB_key = '';
+}
+
+// Simple debounce — delays fn until ms after last call
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+const debouncedUpdateDistCurve = debounce((value) => {
+  if(!state.liveNodes) return;
+  state.liveNodes.driveShaper.curve = makeDistortionCurve(value);
+}, 80);
+
+// Debounced reverb impulse swaps — fires 150ms after knob stops moving
+const swapReverbA = debounce(() => {
+  const n = state.liveNodes, ctx = state.audioCtx;
+  if (!n || !ctx || !state.isPlaying) return;
+  invalidateImpulse('A');
+  const buf = getCachedImpulse(ctx, state.fx.reverb.size, state.fx.reverb.decay, state.fx.reverb.preset, 'A');
+  const t = ctx.currentTime;
+  n.reverbWet.gain.setTargetAtTime(0, t, 0.01);
+  setTimeout(() => {
+    n.reverbConv.buffer = buf;
+    n.reverbWet.gain.setTargetAtTime(state.fx.reverb.on ? state.fx.reverb.mix : 0, ctx.currentTime, 0.015);
+  }, 80);
+}, 150);
+
+const swapReverbB = debounce(() => {
+  const n = state.liveNodes, ctx = state.audioCtx;
+  if (!n || !ctx || !state.isPlaying) return;
+  invalidateImpulse('B');
+  const buf = getCachedImpulse(ctx, state.fx.reverb2.size, state.fx.reverb2.decay, state.fx.reverb2.preset, 'B');
+  const t = ctx.currentTime;
+  n.reverb2Wet.gain.setTargetAtTime(0, t, 0.01);
+  setTimeout(() => {
+    n.reverb2Conv.buffer = buf;
+    n.reverb2Wet.gain.setTargetAtTime(state.fx.reverb2.on ? state.fx.reverb2.mix : 0, ctx.currentTime, 0.015);
+  }, 80);
+}, 150);
+const BITCRUSHER_CODE = `
+class TapeBitCrusher extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name:'bits', defaultValue:16, minValue:1, maxValue:16 },
+      { name:'reduction', defaultValue:1, minValue:1, maxValue:64 }
+    ];
+  }
+  constructor() { super(); this._phase=0; this._sample=0; }
+  process(inputs, outputs, params) {
+    const inp = inputs[0]; const out = outputs[0];
+    const bits = params.bits[0];
+    const red = Math.max(1, Math.round(params.reduction[0]));
+    const step = 2 * Math.pow(0.5, bits);
+    for (let c = 0; c < out.length; c++) {
+      const i = inp[c] || out[c];
+      const o = out[c];
+      for (let n = 0; n < o.length; n++) {
+        this._phase++;
+        if (this._phase >= red) {
+          this._phase = 0;
+          this._sample = step * Math.floor((i[n]||0) / step + 0.5);
+        }
+        o[n] = this._sample;
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('tape-bc', TapeBitCrusher);
+`;
+
+// ── STATE ────────────────────────────────────────────────
+const state = {
+  audioCtx: null,
+  micStream: null,
+  mediaRecorder: null,
+  recordedChunks: [],
+  recordedBuffer: null,
+  isRecording: false,
+  isPlaying: false,
+  recStartTime: 0,
+  playStartTime: 0,
+  recordTimer: null,
+  playTimer: null,
+  source: null,
+  liveAnalyser: null,
+  micSource: null,
+  liveNodes: null,
+  rafId: null,
+  isVideo: false,
+  videoObjectUrl: null,
+  bitCrusherReady: false,
+  fx: {
+    pitch:   { on:false, semi:0, fine:0, formant:1 },
+    dist:    { on:false, amount:20, tone:3000, mix:0.7 },
+    filter:  { on:false, cutoff:2000, q:1, lfo:0, type:'lowpass' },
+    radio:   { on:false, bandwidth:3200, crunch:12, static:0.02, hum:0, dist:10, mix:1 },
+    chorus:  { on:false, rate:1.5, depth:0.005, mix:0.5 },
+    delay:   { on:false, time:0.3, feedback:0.4, mix:0.35 },
+    reverb:  { on:false, size:2, decay:2, mix:0.4, preset:'hall' },
+    reverb2: { on:false, size:3.5, decay:3.5, mix:0.25, preset:'plate' },
+  }
+};
+
+// ── UI REFS ───────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const recBtn=$('#recBtn'), playBtn=$('#playBtn'), stopBtn=$('#stopBtn');
+const clearBtn=$('#clearBtn'), saveBtn=$('#saveBtn');
+const downloadBtn=$('#downloadBtn'), downloadLabel=$('#downloadLabel');
+const exportVideoBtn=$('#exportVideoBtn'), exportVideoLabel=$('#exportVideoLabel');
+const timeDisplay=$('#timeDisplay'), statusText=$('#statusText'), statusLed=$('#statusLed');
+const msg=$('#msg'), toast=$('#toast');
+const scopeEl=$('#scope'), sctx=scopeEl.getContext('2d');
+const videoEl=$('#videoEl'), videoPreview=$('#videoPreview'), videoDur=$('#videoDur');
+const fileInput=$('#fileInput'), importFilename=$('#importFilename');
+const exportCanvas=$('#exportCanvas');
+
+// ── CANVAS / SCOPE ────────────────────────────────────────
+let offscreenWave = null; // pre-rendered waveform, rebuilt when buffer changes
+
+function fitCanvas() {
+  const dpr=window.devicePixelRatio||1, r=scopeEl.getBoundingClientRect();
+  scopeEl.width=r.width*dpr; scopeEl.height=r.height*dpr;
+  sctx.setTransform(dpr,0,0,dpr,0,0);
+  // Invalidate offscreen cache on resize
+  offscreenWave=null;
+  if(state.recordedBuffer) prerenderWaveform(state.recordedBuffer);
+}
+window.addEventListener('resize', fitCanvas);
+
+// Renders waveform ONCE into an OffscreenCanvas (or regular canvas).
+// All subsequent draws are a single drawImage call — O(1) not O(N samples).
+function prerenderWaveform(buffer) {
+  const r=scopeEl.getBoundingClientRect();
+  const w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
+  let oc, octx;
+  try {
+    oc=new OffscreenCanvas(w,h);
+    octx=oc.getContext('2d');
+  } catch(e) {
+    // OffscreenCanvas not available — use regular canvas
+    oc=document.createElement('canvas'); oc.width=w; oc.height=h;
+    octx=oc.getContext('2d');
+  }
+  const data=buffer.getChannelData(0);
+  const step=Math.max(1,Math.floor(data.length/w)), mid=h/2;
+  octx.clearRect(0,0,w,h);
+  octx.fillStyle='rgba(255,20,147,0.15)';
+  octx.beginPath(); octx.moveTo(0,mid);
+  for(let i=0;i<w;i++){let mx=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>mx)mx=v;}octx.lineTo(i,mid-mx*mid*.95);}
+  for(let i=w-1;i>=0;i--){let mx=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>mx)mx=v;}octx.lineTo(i,mid+mx*mid*.95);}
+  octx.closePath(); octx.fill();
+  octx.strokeStyle='rgba(255,20,147,0.9)'; octx.lineWidth=1.5;
+  octx.beginPath();
+  for(let i=0;i<w;i++){let mx=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>mx)mx=v;}if(i===0)octx.moveTo(i,mid-mx*mid*.95);else octx.lineTo(i,mid-mx*mid*.95);}
+  octx.stroke();
+  offscreenWave=oc;
+}
+
+function drawIdle() {
+  const r=scopeEl.getBoundingClientRect();
+  sctx.clearRect(0,0,r.width,r.height);
+  sctx.strokeStyle='rgba(128,255,255,0.15)'; sctx.lineWidth=1;
+  sctx.beginPath(); sctx.moveTo(0,r.height/2); sctx.lineTo(r.width,r.height/2); sctx.stroke();
+}
+
+function drawWaveform(buffer) {
+  if(!buffer){drawIdle();return;}
+  prerenderWaveform(buffer);
+  const r=scopeEl.getBoundingClientRect();
+  sctx.clearRect(0,0,r.width,r.height);
+  sctx.drawImage(offscreenWave,0,0,r.width,r.height);
+}
+
+// Reusable typed array — allocated once, never per-frame
+const _liveBuf = new Uint8Array(512);
+
+// ── ANIMATION SYSTEM ─────────────────────────────────────
+// No RAF during audio playback — RAF competes with the audio thread on mobile.
+// Instead: setTimeout for playhead/timer (67ms = ~15fps) and scope (50ms = 20fps).
+// RAF is only used for the live recording scope where visual smoothness matters more.
+let _scopeTimer  = null;
+let _playTimer   = null;
+
+function startScopeLoop() {
+  stopScopeLoop();
+  const draw = () => {
+    if(!state.liveAnalyser) return;
+    const r = scopeEl.getBoundingClientRect();
+    state.liveAnalyser.getByteTimeDomainData(_liveBuf);
+    sctx.fillStyle = 'rgba(10,0,8,0.2)';
+    sctx.fillRect(0, 0, r.width, r.height);
+    const mid = r.height / 2;
+    sctx.lineWidth = 1.8;
+    sctx.strokeStyle = state.isRecording ? '#ff1493' : '#80ffff';
+    sctx.shadowColor = sctx.strokeStyle; sctx.shadowBlur = 6;
+    sctx.beginPath();
+    for(let i = 0; i < _liveBuf.length; i++) {
+      const x = (i / _liveBuf.length) * r.width;
+      const v = (_liveBuf[i] - 128) / 128;
+      const y = mid + v * mid * 0.9;
+      if(i === 0) sctx.moveTo(x, y); else sctx.lineTo(x, y);
+    }
+    sctx.stroke(); sctx.shadowBlur = 0;
+    _scopeTimer = setTimeout(draw, 50); // 20fps
+  };
+  draw();
+}
+
+function stopScopeLoop() {
+  if(_scopeTimer !== null) { clearTimeout(_scopeTimer); _scopeTimer = null; }
+}
+
+function startPlayheadLoop(ctx) {
+  stopPlayheadLoop();
+  const tick = () => {
+    if(!state.isPlaying) return;
+    const elapsed = ctx.currentTime - state.playStartTime;
+    const dur = state.recordedBuffer
+      ? state.recordedBuffer.duration / (getPlaybackRate().rate || 1)
+      : 1;
+    drawPlayhead(Math.min(1, elapsed / dur));
+    updateTimeDisplay(elapsed);
+    _playTimer = setTimeout(tick, 67); // ~15fps
+  };
+  tick();
+}
+
+function stopPlayheadLoop() {
+  if(_playTimer !== null) { clearTimeout(_playTimer); _playTimer = null; }
+}
+
+// Keep the old rafId for any remaining legacy uses
+let _rafId = null;
+
+// drawLive is now driven by startScopeLoop — this stub stays for compat
+function drawLive() { startScopeLoop(); }
+
+// Playhead: one cheap drawImage of pre-rendered waveform + one line
+function drawPlayhead(progress) {
+  const r=scopeEl.getBoundingClientRect();
+  sctx.clearRect(0,0,r.width,r.height);
+  if(offscreenWave) sctx.drawImage(offscreenWave,0,0,r.width,r.height);
+  if(progress<0||progress>1) return;
+  const x=progress*r.width;
+  sctx.strokeStyle='#80ffff'; sctx.lineWidth=2; sctx.shadowColor='#80ffff'; sctx.shadowBlur=8;
+  sctx.beginPath(); sctx.moveTo(x,0); sctx.lineTo(x,r.height); sctx.stroke(); sctx.shadowBlur=0;
+}
+
+// ── AUDIO INIT ────────────────────────────────────────────
+async function ensureAudio() {
+  if(!state.audioCtx) {
+    state.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    // Warm cache NOW using the real sample rate — must happen after ctx creation
+    // but before any play, so defer 0ms to let the current call stack finish first
+    setTimeout(()=>{
+      if(!state.audioCtx) return;
+      getCachedNoise(state.audioCtx);
+      getCachedImpulse(state.audioCtx,state.fx.reverb.size,state.fx.reverb.decay,state.fx.reverb.preset,'A');
+      getCachedImpulse(state.audioCtx,state.fx.reverb2.size,state.fx.reverb2.decay,state.fx.reverb2.preset,'B');
+    },0);
+  }
+  if(state.audioCtx.state==='suspended') await state.audioCtx.resume();
+}
+
+async function initBitCrusher() {
+  if(state.bitCrusherReady || !state.audioCtx || !state.audioCtx.audioWorklet) return;
+  try {
+    const blob=new Blob([BITCRUSHER_CODE],{type:'application/javascript'});
+    const url=URL.createObjectURL(blob);
+    await state.audioCtx.audioWorklet.addModule(url);
+    URL.revokeObjectURL(url);
+    state.bitCrusherReady=true;
+  } catch(e) { console.warn('BitCrusher AudioWorklet unavailable, using fallback'); }
+}
+
+// ── AUDIO MATH ────────────────────────────────────────────
+function generateImpulse(ctx, duration, decay, preset) {
+  const sr=ctx.sampleRate, len=Math.max(1,Math.floor(sr*duration)), imp=ctx.createBuffer(2,len,sr);
+  const er=preset==='plate'?0:preset==='cathedral'?0.04:0.02;
+  for(let ch=0;ch<2;ch++){
+    const d=imp.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      const t=i/sr, env=Math.pow(1-i/len,decay);
+      let n=Math.random()*2-1;
+      if(preset==='cathedral') n*=(0.6+0.4*Math.sin(t*12+ch));
+      else if(preset==='room') n*=(1-i/len);
+      if(t<er&&Math.random()>.96) n*=4;
+      d[i]=n*env;
+    }
+  }
+  return imp;
+}
+
+function makeDistortionCurve(amount) {
+  const s=1024, curve=new Float32Array(s), k=amount, deg=Math.PI/180;
+  for(let i=0;i<s;i++){const x=(i*2)/s-1;curve[i]=((3+k)*x*20*deg)/(Math.PI+k*Math.abs(x));}
+  return curve;
+}
+
+// Post-process bitcrusher on AudioBuffer (for offline render)
+function applyBitCrusherToBuffer(buf, bits, reduction=1) {
+  const step=2*Math.pow(0.5,bits);
+  const red=Math.max(1,Math.round(reduction));
+  for(let ch=0;ch<buf.numberOfChannels;ch++){
+    const data=buf.getChannelData(ch);
+    let phase=0, sample=0;
+    for(let i=0;i<data.length;i++){
+      phase++;
+      if(phase>=red){phase=0;sample=step*Math.floor(data[i]/step+0.5);}
+      data[i]=sample;
+    }
+  }
+}
+
+// ── OFFLINE FX CHAIN (for WAV bounce & video export) ──────
+function buildFXChain(ctx, fx) {
+  const input=ctx.createGain(); let cursor=input; const startables=[];
+
+  if(fx.dist.on){
+    const dw=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
+    dry.gain.value=1-fx.dist.mix;wet.gain.value=fx.dist.mix;
+    const sh=ctx.createWaveShaper();sh.curve=makeDistortionCurve(fx.dist.amount);sh.oversample='2x';
+    const tone=ctx.createBiquadFilter();tone.type='lowpass';tone.frequency.value=fx.dist.tone;tone.Q.value=.7;
+    cursor.connect(dry);cursor.connect(sh);sh.connect(tone);tone.connect(wet);dry.connect(dw);wet.connect(dw);cursor=dw;
+  }
+  if(fx.filter.on){
+    const f=ctx.createBiquadFilter();f.type=fx.filter.type;f.frequency.value=fx.filter.cutoff;f.Q.value=fx.filter.q;
+    cursor.connect(f);cursor=f;
+    if(fx.filter.lfo>0){const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=fx.filter.lfo;lg.gain.value=fx.filter.cutoff*.6;lfo.connect(lg);lg.connect(f.frequency);startables.push(lfo);}
+  }
+  if(fx.radio.on){
+    const dry=ctx.createGain(),wet=ctx.createGain(),mg=ctx.createGain();
+    dry.gain.value=1-fx.radio.mix;wet.gain.value=fx.radio.mix;
+    const hpf=ctx.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=300;hpf.Q.value=.5;
+    const lpf=ctx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=fx.radio.bandwidth;lpf.Q.value=.5;
+    const sat=ctx.createWaveShaper();sat.curve=makeDistortionCurve(fx.radio.dist);sat.oversample='2x';
+    cursor.connect(dry);cursor.connect(hpf);hpf.connect(lpf);lpf.connect(sat);sat.connect(wet);dry.connect(mg);wet.connect(mg);cursor=mg;
+    // hum oscillator
+    if(fx.radio.hum>0){const hum=ctx.createOscillator(),hg=ctx.createGain();hum.frequency.value=50;hg.gain.value=fx.radio.hum;hum.connect(hg);hg.connect(mg);startables.push(hum);}
+  }
+  if(fx.chorus.on){
+    const dry=ctx.createGain(),wet=ctx.createGain(),mg=ctx.createGain();
+    dry.gain.value=1-fx.chorus.mix*.5;wet.gain.value=fx.chorus.mix;
+    const d1=ctx.createDelay(.05);d1.delayTime.value=.02;const l1=ctx.createOscillator(),lg1=ctx.createGain();l1.frequency.value=fx.chorus.rate;lg1.gain.value=fx.chorus.depth;l1.connect(lg1);lg1.connect(d1.delayTime);startables.push(l1);
+    const d2=ctx.createDelay(.05);d2.delayTime.value=.025;const l2=ctx.createOscillator(),lg2=ctx.createGain();l2.frequency.value=fx.chorus.rate*.83;lg2.gain.value=fx.chorus.depth;l2.connect(lg2);lg2.connect(d2.delayTime);startables.push(l2);
+    cursor.connect(dry);cursor.connect(d1);cursor.connect(d2);d1.connect(wet);d2.connect(wet);dry.connect(mg);wet.connect(mg);cursor=mg;
+  }
+  if(fx.delay.on){
+    const dry=ctx.createGain(),wet=ctx.createGain(),mg=ctx.createGain();
+    dry.gain.value=1;wet.gain.value=fx.delay.mix;
+    const d=ctx.createDelay(2);d.delayTime.value=fx.delay.time;const fb=ctx.createGain();fb.gain.value=fx.delay.feedback;const ff=ctx.createBiquadFilter();ff.type='lowpass';ff.frequency.value=4000;
+    cursor.connect(dry);cursor.connect(d);d.connect(ff);ff.connect(fb);fb.connect(d);d.connect(wet);dry.connect(mg);wet.connect(mg);cursor=mg;
+  }
+  if(fx.reverb.on){
+    const dry=ctx.createGain(),wet=ctx.createGain(),mg=ctx.createGain();
+    dry.gain.value=1;wet.gain.value=fx.reverb.mix;const conv=ctx.createConvolver();
+    conv.buffer=getCachedImpulse(ctx,fx.reverb.size,fx.reverb.decay,fx.reverb.preset,'A');
+    cursor.connect(dry);cursor.connect(conv);conv.connect(wet);dry.connect(mg);wet.connect(mg);cursor=mg;
+  }
+  if(fx.reverb2.on){
+    const dry=ctx.createGain(),wet=ctx.createGain(),mg=ctx.createGain();
+    dry.gain.value=1;wet.gain.value=fx.reverb2.mix;const conv=ctx.createConvolver();
+    conv.buffer=getCachedImpulse(ctx,fx.reverb2.size,fx.reverb2.decay,fx.reverb2.preset,'B');
+    cursor.connect(dry);cursor.connect(conv);conv.connect(wet);dry.connect(mg);wet.connect(mg);cursor=mg;
+  }
+  const comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-10;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=.005;comp.release.value=.1;
+  cursor.connect(comp);
+  startables.forEach(n=>n.start());
+  return{input,output:comp};
+}
+
+// ── LIVE FX CHAIN (real-time, always-on with bypass gains) ──
+function buildLiveChain(ctx) {
+  const fx=state.fx, n={};
+  n.input=ctx.createGain();
+
+  // ── DRIVE
+  n.driveDry=ctx.createGain(); n.driveWet=ctx.createGain(); n.driveMix=ctx.createGain();
+  n.driveShaper=ctx.createWaveShaper(); n.driveShaper.curve=makeDistortionCurve(fx.dist.amount); n.driveShaper.oversample='2x';
+  n.driveTone=ctx.createBiquadFilter(); n.driveTone.type='lowpass'; n.driveTone.frequency.value=fx.dist.tone; n.driveTone.Q.value=.7;
+  n.input.connect(n.driveDry); n.input.connect(n.driveShaper); n.driveShaper.connect(n.driveTone); n.driveTone.connect(n.driveWet);
+  n.driveDry.connect(n.driveMix); n.driveWet.connect(n.driveMix);
+  n.driveDry.gain.value=fx.dist.on?(1-fx.dist.mix):1; n.driveWet.gain.value=fx.dist.on?fx.dist.mix:0;
+
+  // ── FILTER
+  n.filterDry=ctx.createGain(); n.filterWet=ctx.createGain(); n.filterMix=ctx.createGain();
+  n.filter=ctx.createBiquadFilter(); n.filter.type=fx.filter.type; n.filter.frequency.value=fx.filter.cutoff; n.filter.Q.value=fx.filter.q;
+  n.filterLfo=ctx.createOscillator(); n.filterLfo.frequency.value=Math.max(.001,fx.filter.lfo);
+  n.filterLfoGain=ctx.createGain(); n.filterLfoGain.gain.value=(fx.filter.on&&fx.filter.lfo>0)?fx.filter.cutoff*.6:0;
+  n.filterLfo.connect(n.filterLfoGain); n.filterLfoGain.connect(n.filter.frequency); n.filterLfo.start();
+  n.driveMix.connect(n.filterDry); n.driveMix.connect(n.filter); n.filter.connect(n.filterWet);
+  n.filterDry.connect(n.filterMix); n.filterWet.connect(n.filterMix);
+  n.filterDry.gain.value=fx.filter.on?0:1; n.filterWet.gain.value=fx.filter.on?1:0;
+
+  // ── RADIO
+  // Critical: ScriptProcessor runs on main thread. Only insert it into the
+  // signal path when Radio is actually ON. When off, use a plain passthrough.
+  n.radioDry=ctx.createGain(); n.radioWet=ctx.createGain(); n.radioMix=ctx.createGain();
+
+  if(fx.radio.on) {
+    n.radioHPF=ctx.createBiquadFilter(); n.radioHPF.type='highpass'; n.radioHPF.frequency.value=300; n.radioHPF.Q.value=.5;
+    n.radioLPF=ctx.createBiquadFilter(); n.radioLPF.type='lowpass'; n.radioLPF.frequency.value=fx.radio.bandwidth; n.radioLPF.Q.value=.5;
+    n.radioSat=ctx.createWaveShaper(); n.radioSat.curve=makeDistortionCurve(fx.radio.dist); n.radioSat.oversample='2x';
+
+    if(state.bitCrusherReady){
+      n.radioBitCrusher=new AudioWorkletNode(ctx,'tape-bc');
+      n.radioBitCrusher.parameters.get('bits').value=fx.radio.crunch;
+    } else {
+      const sp=ctx.createScriptProcessor(8192,2,2);
+      sp._bits=fx.radio.crunch;
+      sp.onaudioprocess=(e)=>{
+        const bits=Math.max(1,Math.round(sp._bits));
+        const step=2*Math.pow(0.5,bits);
+        for(let ch=0;ch<2;ch++){
+          const inp=e.inputBuffer.getChannelData(ch);
+          const out=e.outputBuffer.getChannelData(ch);
+          for(let i=0;i<inp.length;i++) out[i]=step*Math.floor(inp[i]/step+0.5);
+        }
+      };
+      // Must have a downstream connection to fire, but must NOT reach destination
+      // or it bleeds into output. Use a zero-gain node as a silent sink.
+      const sink=ctx.createGain(); sink.gain.value=0; sink.connect(ctx.destination);
+      sp.connect(sink);
+      n.radioBcSink=sink;
+      n.radioBitCrusher=sp;
+    }
+
+    // white noise
+    n.radioNoise=ctx.createBufferSource(); n.radioNoise.buffer=getCachedNoise(ctx); n.radioNoise.loop=true;
+    n.radioNoiseGain=ctx.createGain(); n.radioNoiseGain.gain.value=fx.radio.static;
+    n.radioNoise.connect(n.radioNoiseGain); n.radioNoise.start();
+    // hum
+    n.radioHum=ctx.createOscillator(); n.radioHum.type='sine'; n.radioHum.frequency.value=50;
+    n.radioHumGain=ctx.createGain(); n.radioHumGain.gain.value=fx.radio.hum;
+    n.radioHum.connect(n.radioHumGain); n.radioHum.start();
+
+    n.filterMix.connect(n.radioHPF);
+    n.radioHPF.connect(n.radioLPF); n.radioLPF.connect(n.radioSat);
+    n.radioSat.connect(n.radioBitCrusher); n.radioBitCrusher.connect(n.radioWet);
+    n.radioNoiseGain.connect(n.radioWet); n.radioHumGain.connect(n.radioWet);
+    n.radioDry.gain.value=1-fx.radio.mix; n.radioWet.gain.value=fx.radio.mix;
+  } else {
+    // Radio OFF — pure passthrough, zero ScriptProcessor overhead
+    n.radioDry.gain.value=1; n.radioWet.gain.value=0;
+  }
+
+  n.filterMix.connect(n.radioDry);
+  n.radioDry.connect(n.radioMix); n.radioWet.connect(n.radioMix);
+
+  // ── CHORUS
+  n.chorusDry=ctx.createGain(); n.chorusWet=ctx.createGain(); n.chorusMix=ctx.createGain();
+  n.chorusDelay1=ctx.createDelay(.05); n.chorusDelay1.delayTime.value=.02;
+  n.chorusDelay2=ctx.createDelay(.05); n.chorusDelay2.delayTime.value=.025;
+  n.chorusLfo1=ctx.createOscillator(); n.chorusLfo1.frequency.value=fx.chorus.rate;
+  n.chorusLfoG1=ctx.createGain(); n.chorusLfoG1.gain.value=fx.chorus.depth;
+  n.chorusLfo2=ctx.createOscillator(); n.chorusLfo2.frequency.value=fx.chorus.rate*.83;
+  n.chorusLfoG2=ctx.createGain(); n.chorusLfoG2.gain.value=fx.chorus.depth;
+  n.chorusLfo1.connect(n.chorusLfoG1); n.chorusLfoG1.connect(n.chorusDelay1.delayTime);
+  n.chorusLfo2.connect(n.chorusLfoG2); n.chorusLfoG2.connect(n.chorusDelay2.delayTime);
+  n.chorusLfo1.start(); n.chorusLfo2.start();
+  n.radioMix.connect(n.chorusDry); n.radioMix.connect(n.chorusDelay1); n.radioMix.connect(n.chorusDelay2);
+  n.chorusDelay1.connect(n.chorusWet); n.chorusDelay2.connect(n.chorusWet);
+  n.chorusDry.connect(n.chorusMix); n.chorusWet.connect(n.chorusMix);
+  n.chorusDry.gain.value=fx.chorus.on?(1-fx.chorus.mix*.5):1; n.chorusWet.gain.value=fx.chorus.on?fx.chorus.mix:0;
+
+  // ── DELAY
+  n.delayDry=ctx.createGain(); n.delayWet=ctx.createGain(); n.delayMix=ctx.createGain();
+  n.delay=ctx.createDelay(2); n.delay.delayTime.value=fx.delay.time;
+  n.delayFeedback=ctx.createGain(); n.delayFeedback.gain.value=fx.delay.feedback;
+  n.delayFbFilter=ctx.createBiquadFilter(); n.delayFbFilter.type='lowpass'; n.delayFbFilter.frequency.value=4000;
+  n.chorusMix.connect(n.delayDry); n.chorusMix.connect(n.delay);
+  n.delay.connect(n.delayFbFilter); n.delayFbFilter.connect(n.delayFeedback); n.delayFeedback.connect(n.delay); n.delay.connect(n.delayWet);
+  n.delayDry.connect(n.delayMix); n.delayWet.connect(n.delayMix);
+  n.delayDry.gain.value=1; n.delayWet.gain.value=fx.delay.on?fx.delay.mix:0;
+
+  // ── REVERB A
+  n.reverbDry=ctx.createGain(); n.reverbWet=ctx.createGain(); n.reverbMix=ctx.createGain();
+  n.reverbConv=ctx.createConvolver(); n.reverbConv.buffer=getCachedImpulse(ctx,fx.reverb.size,fx.reverb.decay,fx.reverb.preset,'A');
+  n.delayMix.connect(n.reverbDry); n.delayMix.connect(n.reverbConv); n.reverbConv.connect(n.reverbWet);
+  n.reverbDry.connect(n.reverbMix); n.reverbWet.connect(n.reverbMix);
+  n.reverbDry.gain.value=1; n.reverbWet.gain.value=fx.reverb.on?fx.reverb.mix:0;
+
+  // ── REVERB B
+  n.reverb2Dry=ctx.createGain(); n.reverb2Wet=ctx.createGain(); n.reverb2Mix=ctx.createGain();
+  n.reverb2Conv=ctx.createConvolver(); n.reverb2Conv.buffer=getCachedImpulse(ctx,fx.reverb2.size,fx.reverb2.decay,fx.reverb2.preset,'B');
+  n.reverbMix.connect(n.reverb2Dry); n.reverbMix.connect(n.reverb2Conv); n.reverb2Conv.connect(n.reverb2Wet);
+  n.reverb2Dry.connect(n.reverb2Mix); n.reverb2Wet.connect(n.reverb2Mix);
+  n.reverb2Dry.gain.value=1; n.reverb2Wet.gain.value=fx.reverb2.on?fx.reverb2.mix:0;
+
+  // ── LIMITER
+  n.comp=ctx.createDynamicsCompressor();
+  n.comp.threshold.value=-10;n.comp.knee.value=12;n.comp.ratio.value=4;n.comp.attack.value=.005;n.comp.release.value=.1;
+  n.reverb2Mix.connect(n.comp);
+
+  return{input:n.input,output:n.comp,nodes:n};
+}
+
+// Properly stop and disconnect all nodes in a live graph.
+// Covers every node that calls .start() in buildLiveChain, plus all connections.
+function teardownLiveNodes(nodes) {
+  if(!nodes) return;
+  // Nodes that were started and must be explicitly stopped
+  const sourcesToStop = [
+    'filterLfo',
+    'chorusLfo1', 'chorusLfo2',
+    'radioNoise', 'radioHum',
+    'radioBitCrusher', 'radioBcSink',
+  ];
+  for(const key of sourcesToStop) {
+    if(nodes[key]) {
+      try { nodes[key].stop(); } catch(e) {}
+      try { nodes[key].disconnect(); } catch(e) {}
+      nodes[key] = null;
+    }
+  }
+  // Disconnect everything else — gain nodes, filters, convolvers, compressor
+  for(const key of Object.keys(nodes)) {
+    if(nodes[key] && typeof nodes[key].disconnect === 'function') {
+      try { nodes[key].disconnect(); } catch(e) {}
+      nodes[key] = null;
+    }
+  }
+}
+
+// Seamlessly rebuild the live audio graph mid-playback.
+let _restarting = false;
+async function restartPlaybackGraph() {
+  if(!state.isPlaying||!state.recordedBuffer||!state.audioCtx) return;
+  if(_restarting) return;
+  _restarting = true;
+  const ctx = state.audioCtx;
+
+  // Capture current position
+  const elapsed = ctx.currentTime - state.playStartTime;
+  const rate = getPlaybackRate().rate || 1;
+  const offset = Math.min(elapsed * rate, state.recordedBuffer.duration - 0.01);
+
+  // Full teardown
+  stopPlayheadLoop(); stopScopeLoop(); cancelAnimationFrame(state.rafId);
+  if(state.source){try{state.source.stop();}catch(e){} try{state.source.disconnect();}catch(e){}}
+  if(state.liveAnalyser){try{state.liveAnalyser.disconnect();}catch(e){}}
+  teardownLiveNodes(state.liveNodes);
+  state.source = null; state.liveNodes = null;
+
+  // Rebuild
+  const chain = buildLiveChain(ctx);
+  state.liveNodes = chain.nodes;
+  const src = ctx.createBufferSource();
+  src.buffer = state.recordedBuffer;
+  const{rate:r, detune} = getPlaybackRate();
+  src.playbackRate.value = r;
+  try{src.detune.value = detune;}catch(e){}
+
+  // Fade-in to mask the splice
+  const fadeGain = ctx.createGain();
+  fadeGain.gain.setValueAtTime(0, ctx.currentTime);
+  fadeGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.020);
+  src.connect(chain.input);
+  chain.output.connect(fadeGain);
+  fadeGain.connect(ctx.destination);
+
+  // Reconnect analyser
+  state.liveAnalyser = ctx.createAnalyser();
+  state.liveAnalyser.fftSize = 512;
+  chain.output.connect(state.liveAnalyser);
+
+  src.start(0, offset);
+  state.source = src;
+  state.playStartTime = ctx.currentTime - elapsed;
+  src.onended = () => { if(state.isPlaying) handleStop(); };
+
+  startPlayheadLoop(ctx);
+  _restarting = false;
+}
+
+// ── REAL-TIME PARAM UPDATE ────────────────────────────────
+function updateLiveParam(param, value) {
+  const n=state.liveNodes, ctx=state.audioCtx;
+  if(!n||!ctx||!state.isPlaying) return;
+  const t=ctx.currentTime;
+  const ramp=(p,v)=>p.setTargetAtTime(v,t,.008);
+  switch(param){
+    case 'pitch.semi': case 'pitch.fine':
+      if(state.source&&state.fx.pitch.on){try{state.source.detune.value=(state.fx.pitch.semi+state.fx.pitch.fine/100)*100;}catch(e){}}break;
+    case 'pitch.formant': if(state.source&&state.fx.pitch.on) state.source.playbackRate.value=value; break;
+    case 'dist.amount':
+      // Debounced — makeDistortionCurve is 1024 float ops, too heavy for every touch move
+      debouncedUpdateDistCurve(value);
+      break;
+    case 'dist.tone': ramp(n.driveTone.frequency,value); break;
+    case 'dist.mix': if(state.fx.dist.on){ramp(n.driveDry.gain,1-value);ramp(n.driveWet.gain,value);} break;
+    case 'filter.cutoff': ramp(n.filter.frequency,value); if(state.fx.filter.on&&state.fx.filter.lfo>0)ramp(n.filterLfoGain.gain,value*.6); break;
+    case 'filter.q': ramp(n.filter.Q,value); break;
+    case 'filter.lfo': n.filterLfo.frequency.value=Math.max(.001,value); ramp(n.filterLfoGain.gain,state.fx.filter.on&&value>0?state.fx.filter.cutoff*.6:0); break;
+    case 'filter.type': n.filter.type=value; break;
+    case 'radio.bandwidth': if(n.radioLPF) ramp(n.radioLPF.frequency,value); break;
+    case 'radio.crunch':
+      if(n.radioBitCrusher) {
+        if(state.bitCrusherReady&&n.radioBitCrusher.parameters) {
+          n.radioBitCrusher.parameters.get('bits').value=value;
+        } else if(typeof n.radioBitCrusher._bits !== 'undefined') {
+          n.radioBitCrusher._bits=value;
+        }
+      }
+      break;
+    case 'radio.static': if(n.radioNoiseGain) ramp(n.radioNoiseGain.gain,value); break;
+    case 'radio.hum': if(n.radioHumGain) ramp(n.radioHumGain.gain,value); break;
+    case 'radio.dist': if(n.radioSat) n.radioSat.curve=makeDistortionCurve(value); break;
+    case 'radio.mix':
+      if(state.fx.radio.on&&n.radioDry&&n.radioWet){ramp(n.radioDry.gain,1-value);ramp(n.radioWet.gain,value);}
+      break;
+    case 'chorus.rate': n.chorusLfo1.frequency.value=value; n.chorusLfo2.frequency.value=value*.83; break;
+    case 'chorus.depth': ramp(n.chorusLfoG1.gain,value); ramp(n.chorusLfoG2.gain,value); break;
+    case 'chorus.mix': if(state.fx.chorus.on){ramp(n.chorusDry.gain,1-value*.5);ramp(n.chorusWet.gain,value);} break;
+    case 'delay.time': ramp(n.delay.delayTime,value); break;
+    case 'delay.feedback': ramp(n.delayFeedback.gain,value); break;
+    case 'delay.mix': if(state.fx.delay.on) ramp(n.delayWet.gain,value); break;
+    case 'reverb.mix': if(state.fx.reverb.on) ramp(n.reverbWet.gain,value); break;
+    case 'reverb.size': case 'reverb.decay': case 'reverb.preset':
+      swapReverbA(); break;
+    case 'reverb2.mix': if(state.fx.reverb2.on) ramp(n.reverb2Wet.gain,value); break;
+    case 'reverb2.size': case 'reverb2.decay': case 'reverb2.preset':
+      swapReverbB(); break;
+  }
+}
+
+function updateLiveToggle(fxName, on) {
+  const n=state.liveNodes, ctx=state.audioCtx;
+  if(!n||!ctx||!state.isPlaying) return;
+  const fx=state.fx, t=ctx.currentTime;
+  const ramp=(p,v)=>p.setTargetAtTime(v,t,.012);
+  switch(fxName){
+    case 'pitch':
+      if(state.source){state.source.playbackRate.value=on?fx.pitch.formant:1;try{state.source.detune.value=on?(fx.pitch.semi+fx.pitch.fine/100)*100:0;}catch(e){}}break;
+    case 'dist': ramp(n.driveDry.gain,on?(1-fx.dist.mix):1); ramp(n.driveWet.gain,on?fx.dist.mix:0); break;
+    case 'filter': ramp(n.filterDry.gain,on?0:1); ramp(n.filterWet.gain,on?1:0); ramp(n.filterLfoGain.gain,on&&fx.filter.lfo>0?fx.filter.cutoff*.6:0); break;
+    case 'radio':
+      // Radio has a conditional ScriptProcessor — rebuild the graph seamlessly
+      if(state.isPlaying) restartPlaybackGraph();
+      break;
+    case 'chorus': ramp(n.chorusDry.gain,on?(1-fx.chorus.mix*.5):1); ramp(n.chorusWet.gain,on?fx.chorus.mix:0); break;
+    case 'delay': ramp(n.delayWet.gain,on?fx.delay.mix:0); break;
+    case 'reverb': ramp(n.reverbWet.gain,on?fx.reverb.mix:0); break;
+    case 'reverb2': ramp(n.reverb2Wet.gain,on?fx.reverb2.mix:0); break;
+  }
+}
+
+function syncLiveGraphToState() {
+  if(!state.liveNodes||!state.isPlaying) return;
+  // Skip 'radio' here — it would trigger restartPlaybackGraph which is only
+  // needed on explicit toggle, not on preset apply.
+  ['dist','filter','chorus','delay','reverb','reverb2','pitch'].forEach(f=>updateLiveToggle(f,state.fx[f].on));
+  const pm={
+    'dist.amount':state.fx.dist.amount,'dist.tone':state.fx.dist.tone,'dist.mix':state.fx.dist.mix,
+    'filter.cutoff':state.fx.filter.cutoff,'filter.q':state.fx.filter.q,'filter.lfo':state.fx.filter.lfo,'filter.type':state.fx.filter.type,
+    'chorus.rate':state.fx.chorus.rate,'chorus.depth':state.fx.chorus.depth,'chorus.mix':state.fx.chorus.mix,
+    'delay.time':state.fx.delay.time,'delay.feedback':state.fx.delay.feedback,'delay.mix':state.fx.delay.mix,
+    'reverb.mix':state.fx.reverb.mix,'reverb2.mix':state.fx.reverb2.mix,
+  };
+  // Only sync radio params if radio nodes actually exist in the current graph
+  if(state.fx.radio.on && state.liveNodes.radioLPF){
+    pm['radio.bandwidth']=state.fx.radio.bandwidth;
+    pm['radio.crunch']=state.fx.radio.crunch;
+    pm['radio.static']=state.fx.radio.static;
+    pm['radio.hum']=state.fx.radio.hum;
+    pm['radio.dist']=state.fx.radio.dist;
+    pm['radio.mix']=state.fx.radio.mix;
+  }
+  Object.entries(pm).forEach(([k,v])=>updateLiveParam(k,v));
+  if(state.liveNodes.reverbConv) state.liveNodes.reverbConv.buffer=getCachedImpulse(state.audioCtx,state.fx.reverb.size,state.fx.reverb.decay,state.fx.reverb.preset,'A');
+  if(state.liveNodes.reverb2Conv) state.liveNodes.reverb2Conv.buffer=getCachedImpulse(state.audioCtx,state.fx.reverb2.size,state.fx.reverb2.decay,state.fx.reverb2.preset,'B');
+}
+
+// ── PLAYBACK RATE ─────────────────────────────────────────
+function getPlaybackRate() {
+  if(!state.fx.pitch.on) return{rate:1,detune:0};
+  return{rate:state.fx.pitch.formant,detune:(state.fx.pitch.semi+state.fx.pitch.fine/100)*100};
+}
+
+// ── TIME DISPLAY ──────────────────────────────────────────
+function updateTimeDisplay(seconds) {
+  const m=Math.floor(seconds/60),s=Math.floor(seconds%60),t=Math.floor((seconds*10)%10);
+  timeDisplay.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${t}`;
+}
+
+// ── RECORDING ────────────────────────────────────────────
+async function startRecording() {
+  try {
+    if(!state.micStream){
+      msg.textContent='Requesting mic access...';
+      state.micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    }
+    await ensureAudio(); await initBitCrusher();
+    if(state.liveAnalyser){try{state.liveAnalyser.disconnect();}catch(e){} state.liveAnalyser=null;}
+    if(state.micSource){try{state.micSource.disconnect();}catch(e){} state.micSource=null;}
+    state.micSource=state.audioCtx.createMediaStreamSource(state.micStream);
+    state.liveAnalyser=state.audioCtx.createAnalyser(); state.liveAnalyser.fftSize=1024;
+    state.micSource.connect(state.liveAnalyser);
+    let mime='';
+    for(const c of['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'])
+      {if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(c)){mime=c;break;}}
+    state.recordedChunks=[];
+    state.mediaRecorder=new MediaRecorder(state.micStream,mime?{mimeType:mime}:undefined);
+    state.mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)state.recordedChunks.push(e.data);};
+    state.mediaRecorder.onstop=handleRecordingStop;
+    state.mediaRecorder.start();
+    state.isRecording=true; state.recStartTime=state.audioCtx.currentTime; state.isVideo=false;
+    recBtn.classList.add('active'); $('#recLabel').textContent='STOP';
+    statusText.textContent='RECORDING'; statusLed.className='led rec';
+    msg.textContent='Recording — speak, sing, beatbox.';
+    playBtn.disabled=true; stopBtn.disabled=true; clearBtn.disabled=true; downloadBtn.disabled=true; saveBtn.disabled=true;
+    cancelAnimationFrame(state.rafId); startScopeLoop();
+    state.recordTimer=setInterval(()=>updateTimeDisplay(state.audioCtx.currentTime-state.recStartTime),200);
+  } catch(err) {
+    console.error(err);
+    const n=err&&err.name?err.name:'';
+    if(n==='NotAllowedError'||n==='SecurityError') msg.textContent='Mic blocked — check browser site settings.';
+    else if(n==='NotFoundError') msg.textContent='No microphone found.';
+    else if(n==='NotReadableError') msg.textContent='Mic in use by another app.';
+    else msg.textContent='Mic error: '+(err.message||n||'unknown');
+    statusText.textContent='NO MIC'; statusLed.className='led';
+    clearInterval(state.recordTimer); state.recordTimer=null;
+  }
+}
+
+async function stopRecording() {
+  if(!state.isRecording||!state.mediaRecorder) return;
+  state.mediaRecorder.stop(); state.isRecording=false;
+  recBtn.classList.remove('active'); $('#recLabel').textContent='REC';
+  statusText.textContent='PROCESSING'; statusLed.className='led on';
+  clearInterval(state.recordTimer); stopScopeLoop(); cancelAnimationFrame(state.rafId);
+}
+
+async function handleRecordingStop() {
+  try {
+    const blob=new Blob(state.recordedChunks,{type:state.mediaRecorder.mimeType||'audio/webm'});
+    const arr=await blob.arrayBuffer();
+    state.recordedBuffer=await new Promise((res,rej)=>{
+      const r=state.audioCtx.decodeAudioData(arr,res,rej);
+      if(r&&typeof r.then==='function') r.then(res).catch(rej);
+    });
+    drawWaveform(state.recordedBuffer);
+    statusText.textContent='READY'; statusLed.className='led on';
+    playBtn.disabled=false; clearBtn.disabled=false; downloadBtn.disabled=false; saveBtn.disabled=false;
+    exportVideoBtn.style.display='none';
+    msg.textContent=`Recorded ${state.recordedBuffer.duration.toFixed(1)}s. Tweak FX, hit PLAY.`;
+    updateTimeDisplay(state.recordedBuffer.duration);
+  } catch(err) { msg.textContent='Could not decode recording. Try again.'; }
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────
+async function startPlayback() {
+  if(!state.recordedBuffer||state.isPlaying) return;
+  await ensureAudio(); await initBitCrusher();
+  const ctx = state.audioCtx;
+
+  // Build graph synchronously but start audio on next tick
+  // so the main thread finishes any pending UI work first
+  const chain = buildLiveChain(ctx);
+  state.liveNodes = chain.nodes;
+
+  const src = ctx.createBufferSource();
+  src.buffer = state.recordedBuffer;
+  const{rate,detune} = getPlaybackRate();
+  src.playbackRate.value = rate;
+  try{src.detune.value = detune;}catch(e){}
+  src.connect(chain.input);
+
+  // Analyser at 512 not 1024 — half the data, same visual quality for oscilloscope
+  state.liveAnalyser = ctx.createAnalyser();
+  state.liveAnalyser.fftSize = 512;
+  chain.output.connect(state.liveAnalyser);
+  chain.output.connect(ctx.destination);
+
+  src.onended = () => { if(state.isPlaying) handleStop(); };
+
+  // Update UI before starting audio
+  playBtn.classList.add('active'); stopBtn.disabled = false; recBtn.disabled = true;
+  statusText.textContent = 'PLAYING'; statusLed.className = 'led on';
+  msg.textContent = '▶ Playing — tweak knobs to hear changes live.';
+  stopScopeLoop();
+  stopPlayheadLoop();
+  cancelAnimationFrame(state.rafId);
+
+  // Start audio — deferred one tick so UI paint happens first
+  setTimeout(() => {
+    src.start();
+    state.source = src;
+    state.isPlaying = true;
+    state.playStartTime = ctx.currentTime;
+    startPlayheadLoop(ctx);
+  }, 0);
+}
+
+function handleStop() {
+  stopPlayheadLoop();
+  stopScopeLoop();
+  cancelAnimationFrame(state.rafId);
+  if(state.source){try{state.source.stop();}catch(e){}try{state.source.disconnect();}catch(e){}state.source=null;}
+  if(state.liveAnalyser){try{state.liveAnalyser.disconnect();}catch(e){} state.liveAnalyser=null;}
+  teardownLiveNodes(state.liveNodes);
+  state.liveNodes=null; state.isPlaying=false;
+  playBtn.classList.remove('active'); playBtn.disabled=false;
+  stopBtn.disabled=true; recBtn.disabled=false;
+  statusText.textContent='READY'; statusLed.className='led on';
+  if(state.recordedBuffer){drawWaveform(state.recordedBuffer);updateTimeDisplay(state.recordedBuffer.duration);}
+}
+
+function clearRecording() {
+  if(state.isPlaying) handleStop();
+  state.recordedBuffer=null; state.recordedChunks=[];
+  if(state.micSource){try{state.micSource.disconnect();}catch(e){} state.micSource=null;}
+  if(state.micStream){state.micStream.getTracks().forEach(t=>t.stop());state.micStream=null;}
+  if(state.liveAnalyser){try{state.liveAnalyser.disconnect();}catch(e){} state.liveAnalyser=null;}
+  state.isVideo=false;
+  if(state.videoObjectUrl){try{URL.revokeObjectURL(state.videoObjectUrl);}catch(e){} state.videoObjectUrl=null;}
+  videoPreview.classList.remove('show'); videoEl.src='';
+  exportVideoBtn.style.display='none'; importFilename.textContent='';
+  playBtn.disabled=true; stopBtn.disabled=true; clearBtn.disabled=true; downloadBtn.disabled=true; saveBtn.disabled=true;
+  drawIdle(); updateTimeDisplay(0); statusText.textContent='READY';
+  stopScopeLoop(); stopPlayheadLoop(); cancelAnimationFrame(state.rafId);
+  msg.textContent='Tap REC or IMPORT · FX bake into the export';
+}
+
+// ── FILE IMPORT ───────────────────────────────────────────
+
+// Primary: decode the ArrayBuffer directly (works for audio files + MP4 in Chrome/Firefox)
+async function decodeAudioDirect(arr, ctx) {
+  return new Promise((resolve, reject) => {
+    const copy = arr.slice(0); // decodeAudioData consumes the buffer
+    try {
+      const r = ctx.decodeAudioData(copy, resolve, reject);
+      if (r && typeof r.then === 'function') r.then(resolve).catch(reject);
+    } catch(e) { reject(e); }
+  });
+}
+
+// Fallback: load into <video>, pipe through Web Audio via ScriptProcessor, capture samples.
+// Cross-browser safe — works on Safari where decodeAudioData rejects video containers.
+function captureAudioViaVideoElement(file, ctx) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const vid = document.createElement('video');
+    vid.src = url; vid.preload = 'auto'; vid.crossOrigin = 'anonymous';
+    const cleanup = () => { try { URL.revokeObjectURL(url); } catch(e){} };
+
+    vid.addEventListener('error', () => { cleanup(); reject(new Error('Video could not be loaded by the browser.')); }, { once: true });
+
+    vid.addEventListener('loadedmetadata', () => {
+      const duration = vid.duration;
+      if (!isFinite(duration) || duration <= 0) { cleanup(); reject(new Error('Could not read video duration.')); return; }
+
+      const sr = ctx.sampleRate;
+      const numSamples = Math.ceil(duration * sr) + 4096; // small tail
+      const ch0 = new Float32Array(numSamples);
+      const ch1 = new Float32Array(numSamples);
+      let offset = 0, done = false;
+
+      // Need a fresh AudioContext — createMediaElementSource locks the element to one context
+      const capCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: sr });
+      const source = capCtx.createMediaElementSource(vid);
+      const bufSize = 4096;
+      // ScriptProcessor: deprecated but universally supported, including Safari
+      const proc = capCtx.createScriptProcessor(bufSize, 2, 2);
+
+      proc.onaudioprocess = (e) => {
+        if (done) return;
+        const l = e.inputBuffer.getChannelData(0);
+        const r = e.inputBuffer.getChannelData(1);
+        const toWrite = Math.min(l.length, numSamples - offset);
+        ch0.set(l.subarray(0, toWrite), offset);
+        ch1.set(r.subarray(0, toWrite), offset);
+        offset += toWrite;
+        if (offset >= numSamples || vid.ended) {
+          done = true;
+          try { proc.disconnect(); source.disconnect(); capCtx.close(); } catch(e) {}
+          cleanup();
+          // Build final AudioBuffer at the MAIN context's sample rate
+          const final = ctx.createBuffer(2, Math.max(1, offset), sr);
+          final.getChannelData(0).set(ch0.subarray(0, offset));
+          final.getChannelData(1).set(ch1.subarray(0, offset));
+          resolve(final);
+        }
+      };
+
+      source.connect(proc);
+      proc.connect(capCtx.destination); // ScriptProcessor must route to destination to fire
+      vid.play().catch(e => { cleanup(); reject(e); });
+
+      // Safety: if video ends but onaudioprocess doesn't fire a final flush
+      vid.addEventListener('ended', () => {
+        setTimeout(() => {
+          if (!done) { done = true; try { proc.disconnect(); source.disconnect(); capCtx.close(); } catch(e) {} cleanup();
+            const final = ctx.createBuffer(2, Math.max(1, offset), sr);
+            final.getChannelData(0).set(ch0.subarray(0, offset));
+            final.getChannelData(1).set(ch1.subarray(0, offset));
+            resolve(final);
+          }
+        }, 500);
+      }, { once: true });
+    }, { once: true });
+  });
+}
+
+async function handleFileImport(file) {
+  if (!file) return;
+  await ensureAudio(); await initBitCrusher();
+  const isVideo = /^video\//i.test(file.type) || /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(file.name);
+  importFilename.textContent = file.name.length > 22 ? file.name.slice(0, 19) + '...' : file.name;
+  msg.textContent = 'Decoding ' + (isVideo ? 'video' : 'audio') + '...';
+  statusText.textContent = 'LOADING'; statusLed.className = 'led on';
+  playBtn.disabled = true; clearBtn.disabled = true; downloadBtn.disabled = true; saveBtn.disabled = true;
+  try {
+    const arr = await file.arrayBuffer();
+    let buffer = null;
+
+    // Path 1: direct decode (fast — works for audio files + video in Chrome/Firefox)
+    try {
+      buffer = await decodeAudioDirect(arr, state.audioCtx);
+    } catch(e) {
+      console.warn('Direct decode failed, using video element fallback:', e.message);
+    }
+
+    // Path 2: video element capture fallback (Safari + unsupported containers)
+    if (!buffer) {
+      msg.textContent = 'Extracting audio track… (this takes real-time)';
+      buffer = await captureAudioViaVideoElement(file, state.audioCtx);
+    }
+
+    state.recordedBuffer = buffer;
+    state.isVideo = isVideo;
+
+    if (isVideo) {
+      // Load original video for visual preview + export sync
+      const vidUrl = URL.createObjectURL(file);
+      // Revoke previous URL if any
+      if (state.videoObjectUrl) { try { URL.revokeObjectURL(state.videoObjectUrl); } catch(e) {} }
+      state.videoObjectUrl = vidUrl;
+      videoEl.src = vidUrl;
+      await new Promise((res) => { videoEl.onloadedmetadata = res; videoEl.onerror = res; });
+      const d = videoEl.duration;
+      videoDur.textContent = isFinite(d) ? `${Math.floor(d/60)}:${String(Math.floor(d%60)).padStart(2,'0')}` : '';
+      videoPreview.classList.add('show');
+      exportVideoBtn.style.display = 'flex';
+      exportVideoBtn.disabled = false;
+    } else {
+      videoPreview.classList.remove('show');
+      exportVideoBtn.style.display = 'none';
+    }
+
+    drawWaveform(state.recordedBuffer);
+    statusText.textContent = 'READY'; statusLed.className = 'led on';
+    playBtn.disabled = false; clearBtn.disabled = false;
+    downloadBtn.disabled = false; saveBtn.disabled = false;
+    msg.textContent = `${isVideo ? 'Video' : 'Audio'} loaded — ${state.recordedBuffer.duration.toFixed(1)}s. Dial in FX, hit PLAY.`;
+    updateTimeDisplay(state.recordedBuffer.duration);
+  } catch(err) {
+    msg.textContent = 'Could not load file: ' + (err.message || 'unknown error');
+    statusText.textContent = 'ERROR'; statusLed.className = 'led';
+    playBtn.disabled = true; clearBtn.disabled = false;
+    console.error(err);
+  }
+}
+
+// ── WAV EXPORT ────────────────────────────────────────────
+async function bounceToWav() {
+  if(!state.recordedBuffer) return;
+  downloadBtn.disabled=true; downloadLabel.textContent='Rendering…';
+  try {
+    const buf=state.recordedBuffer;
+    const{rate,detune}=getPlaybackRate();
+    const sr=state.audioCtx.sampleRate;
+    const contentSamples=Math.ceil(buf.length/Math.max(.01,rate));
+
+    // Calculate tail based on what's actually active.
+    // Reverb needs time to decay naturally — use the largest active reverb size.
+    // Delay also needs tail time for feedback to die out.
+    // If nothing time-based is on, no tail needed.
+    let tailSeconds=0;
+    if(state.fx.reverb.on)  tailSeconds=Math.max(tailSeconds, state.fx.reverb.size  * state.fx.reverb.decay  * 0.35);
+    if(state.fx.reverb2.on) tailSeconds=Math.max(tailSeconds, state.fx.reverb2.size * state.fx.reverb2.decay * 0.35);
+    if(state.fx.delay.on)   tailSeconds=Math.max(tailSeconds, state.fx.delay.time * (1/(1-Math.min(0.99,state.fx.delay.feedback))) * 0.15);
+    tailSeconds=Math.min(tailSeconds, 6); // never more than 6s tail
+    tailSeconds=Math.max(tailSeconds, 0.1);
+
+    const tailSamples=Math.ceil(sr*tailSeconds);
+    const outLen=contentSamples+tailSamples;
+    const offline=new OfflineAudioContext(2,outLen,sr);
+
+    // Source with fade-in/out applied BEFORE the FX chain.
+    // This way the fade shapes the input signal only — reverb and delay
+    // continue to decay naturally into the tail after the source goes silent.
+    const sourceGain=offline.createGain();
+    const fadeIn=0.010, fadeOut=0.050;
+    sourceGain.gain.setValueAtTime(0,0);
+    sourceGain.gain.linearRampToValueAtTime(1,fadeIn);
+    const fadeOutStart=Math.max(fadeIn+0.001, contentSamples/sr - fadeOut);
+    sourceGain.gain.setValueAtTime(1,fadeOutStart);
+    sourceGain.gain.linearRampToValueAtTime(0,fadeOutStart+fadeOut);
+
+    const src=offline.createBufferSource();
+    src.buffer=buf; src.playbackRate.value=rate;
+    try{src.detune.value=detune;}catch(e){}
+
+    const chain=buildFXChain(offline,state.fx);
+    // Source → fade → FX chain → destination
+    // Reverb tail flows: FX chain output → destination (unrestricted, decays naturally)
+    src.connect(sourceGain);
+    sourceGain.connect(chain.input);
+    chain.output.connect(offline.destination);
+    src.start();
+    const rendered=await offline.startRendering();
+
+    // Trim silence from the end — find last sample above noise floor
+    // so we don't export dead silence after the reverb has fully decayed
+    const trimmedLen=findTailEnd(rendered, contentSamples);
+    const renderTarget=trimAudioBuffer(rendered, trimmedLen);
+
+    // Radio post-process
+    if(state.fx.radio.on){
+      applyBitCrusherToBuffer(renderTarget,state.fx.radio.crunch);
+      if(state.fx.radio.static>0){
+        for(let ch=0;ch<renderTarget.numberOfChannels;ch++){
+          const d=renderTarget.getChannelData(ch);
+          for(let i=0;i<d.length;i++){
+            const noise=(Math.random()+Math.random()-1)*state.fx.radio.static;
+            d[i]=Math.max(-1,Math.min(1,d[i]+noise));
+          }
+        }
+      }
+    }
+
+    const wav=audioBufferToWav(renderTarget);
+    downloadFile(new Blob([wav],{type:'audio/wav'}),`tape_fm_${timestamp()}.wav`);
+    msg.textContent=`▼ WAV bounced (${(renderTarget.length/sr).toFixed(1)}s). Check downloads.`;
+  } catch(err) { msg.textContent='Render failed: '+err.message; console.error(err); }
+  finally { downloadBtn.disabled=false; downloadLabel.textContent='▼ BOUNCE TO WAV'; }
+}
+
+// Find where the audio actually ends.
+// Scans in 256-sample chunks from the end, using RMS not peak,
+// with a -50dB threshold (0.003) — strict enough to catch silence,
+// loose enough not to cut reverb that's still audible.
+function findTailEnd(buffer, contentSamples) {
+  const threshold = 0.003; // -50dB — strict but not brutal
+  const chunkSize = 256;
+  const sr = buffer.sampleRate;
+  const totalLen = buffer.length;
+  const ch0 = buffer.getChannelData(0);
+  const ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : ch0;
+
+  for(let i = totalLen - chunkSize; i > contentSamples; i -= chunkSize) {
+    let rms = 0;
+    for(let j = i; j < Math.min(i + chunkSize, totalLen); j++) {
+      const s = (Math.abs(ch0[j]) + Math.abs(ch1[j])) * 0.5;
+      rms += s * s;
+    }
+    rms = Math.sqrt(rms / chunkSize);
+    if(rms > threshold) {
+      // Found meaningful audio — add 80ms silence after this chunk for clean ending
+      return Math.min(totalLen, i + chunkSize + Math.ceil(sr * 0.08));
+    }
+  }
+  // Nothing found in tail — content length + 50ms
+  return Math.min(totalLen, contentSamples + Math.ceil(sr * 0.05));
+}
+
+// Trim an AudioBuffer to a given length — universally cross-browser.
+// state.audioCtx.createBuffer() works in Chrome, Firefox, and Safari.
+function trimAudioBuffer(buffer, length) {
+  length=Math.max(1,Math.min(buffer.length,length));
+  if(length===buffer.length) return buffer;
+  const out=state.audioCtx.createBuffer(buffer.numberOfChannels,length,buffer.sampleRate);
+  for(let ch=0;ch<buffer.numberOfChannels;ch++)
+    out.getChannelData(ch).set(buffer.getChannelData(ch).subarray(0,length));
+  return out;
+}
+
+// ── VIDEO EXPORT ──────────────────────────────────────────
+function getBestVideoMime() {
+  const candidates = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+    'video/mp4',  // Safari 14.1+ — limited but worth trying
+  ];
+  for (const m of candidates) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return null;
+}
+
+async function exportVideo() {
+  if (!state.recordedBuffer || !state.isVideo) return;
+
+  // Safari check — bail with a clear, specific message
+  const mime = getBestVideoMime();
+  if (!mime) {
+    msg.textContent = 'Video export needs Chrome or Firefox — your browser does not support MediaRecorder with video. Use "Bounce to WAV" instead.';
+    showToast('USE CHROME FOR VIDEO EXPORT');
+    return;
+  }
+
+  exportVideoBtn.disabled = true; exportVideoLabel.textContent = 'Rendering audio…';
+  msg.textContent = 'Step 1/3: Rendering FX chain offline…';
+
+  try {
+    // ── Step 1: offline render audio with all FX ──────────
+    const buf = state.recordedBuffer;
+    const { rate, detune } = getPlaybackRate();
+    const sr = state.audioCtx.sampleRate;
+    const contentSamples = Math.ceil(buf.length / Math.max(.01, rate));
+    // Use same smart tail calculation as WAV export
+    let tailSeconds=0;
+    if(state.fx.reverb.on)  tailSeconds=Math.max(tailSeconds, state.fx.reverb.size  * state.fx.reverb.decay  * 0.35);
+    if(state.fx.reverb2.on) tailSeconds=Math.max(tailSeconds, state.fx.reverb2.size * state.fx.reverb2.decay * 0.35);
+    if(state.fx.delay.on)   tailSeconds=Math.max(tailSeconds, state.fx.delay.time * (1/(1-Math.min(0.99,state.fx.delay.feedback))) * 0.15);
+    tailSeconds=Math.min(Math.max(tailSeconds,0.1),6);
+    const outLen = contentSamples + Math.ceil(sr * tailSeconds);
+    const offline = new OfflineAudioContext(2, outLen, sr);
+
+    // Fade on source only — reverb decays naturally into tail
+    const sourceGain = offline.createGain();
+    const fadeOut = 0.050;
+    sourceGain.gain.setValueAtTime(0, 0);
+    sourceGain.gain.linearRampToValueAtTime(1, 0.010);
+    const fadeOutStart = Math.max(0.011, contentSamples/sr - fadeOut);
+    sourceGain.gain.setValueAtTime(1, fadeOutStart);
+    sourceGain.gain.linearRampToValueAtTime(0, fadeOutStart + fadeOut);
+
+    const src = offline.createBufferSource();
+    src.buffer = buf; src.playbackRate.value = rate;
+    try { src.detune.value = detune; } catch(e) {}
+    const chain = buildFXChain(offline, state.fx);
+    src.connect(sourceGain);
+    sourceGain.connect(chain.input);
+    chain.output.connect(offline.destination);
+    src.start();
+    let processedBuf = await offline.startRendering();
+    // Trim to actual content
+    processedBuf = trimAudioBuffer(processedBuf, findTailEnd(processedBuf, contentSamples));
+
+    // Post-process radio FX (bitcrusher + noise)
+    if (state.fx.radio.on) {
+      applyBitCrusherToBuffer(processedBuf, state.fx.radio.crunch);
+      if (state.fx.radio.static > 0) {
+        for (let ch = 0; ch < processedBuf.numberOfChannels; ch++) {
+          const d = processedBuf.getChannelData(ch);
+          for (let i = 0; i < d.length; i++) {
+            d[i] = Math.max(-1, Math.min(1, d[i] + (Math.random() * 2 - 1) * state.fx.radio.static));
+          }
+        }
+      }
+    }
+
+    // ── Step 2: set up playback AudioContext → MediaStream ──
+    msg.textContent = 'Step 2/3: Setting up video capture…';
+    exportVideoLabel.textContent = 'Capturing…';
+
+    const playCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioSrc = playCtx.createBufferSource();
+    audioSrc.buffer = processedBuf;
+    const audioDest = playCtx.createMediaStreamDestination();
+    audioSrc.connect(audioDest);
+
+    // ── Step 3: canvas frame capture ──────────────────────
+    const vw = videoEl.videoWidth || 1280;
+    const vh = videoEl.videoHeight || 720;
+    const maxW = 1280;
+    const scale = Math.min(1, maxW / vw);
+    exportCanvas.width = Math.round(vw * scale);
+    exportCanvas.height = Math.round(vh * scale);
+    const ectx = exportCanvas.getContext('2d');
+
+    // Prime the canvas with a frame before captureStream
+    videoEl.currentTime = 0;
+    await new Promise(r => { videoEl.onseeked = r; setTimeout(r, 500); });
+    ectx.drawImage(videoEl, 0, 0, exportCanvas.width, exportCanvas.height);
+
+    const videoStream = exportCanvas.captureStream(30);
+    const combined = new MediaStream([
+      ...videoStream.getVideoTracks(),
+      ...audioDest.stream.getAudioTracks()
+    ]);
+
+    const recOptions = { mimeType: mime, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 192_000 };
+    const recorder = new MediaRecorder(combined, recOptions);
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+
+    const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: mime });
+      downloadFile(blob, `tape_fm_video_${timestamp()}.${ext}`);
+      exportVideoLabel.textContent = '▼ EXPORT VIDEO';
+      exportVideoBtn.disabled = false;
+      msg.textContent = `▼ Video exported as ${ext.toUpperCase()}. Check downloads.`;
+      showToast('▲ VIDEO EXPORTED ▲');
+      try { playCtx.close(); } catch(e) {}
+    };
+
+    // ── Step 4: sync play + draw frames ───────────────────
+    msg.textContent = 'Step 3/3: Exporting… (keep tab visible)';
+    const duration = Math.min(
+      isFinite(videoEl.duration) ? videoEl.duration : 9999,
+      processedBuf.duration
+    );
+    videoEl.muted = true;
+    videoEl.currentTime = 0;
+
+    // Verify captureStream is supported (not on iOS Safari)
+    if (typeof exportCanvas.captureStream !== 'function') {
+      throw new Error('captureStream not supported — use Chrome or Firefox for video export.');
+    }
+
+    recorder.start(200);
+    audioSrc.start();
+
+    // play() returns a Promise — must await and handle rejection explicitly
+    try {
+      await videoEl.play();
+    } catch(playErr) {
+      recorder.stop();
+      try { playCtx.close(); } catch(e) {}
+      throw new Error('Video playback blocked by browser autoplay policy. Tap the video preview first to unlock playback, then try exporting again.');
+    }
+
+    // Use requestVideoFrameCallback if available for perfect frame timing
+    let exportDone = false;
+    const stopExport = () => {
+      if (exportDone) return;
+      exportDone = true;
+      videoEl.pause();
+      videoEl.currentTime = 0;
+      videoEl.muted = false;
+      if (recorder.state === 'recording') recorder.stop();
+    };
+
+    const drawFrameLoop = () => {
+      if (exportDone) return;
+      if (videoEl.currentTime >= duration - 0.05 || videoEl.ended) {
+        stopExport(); return;
+      }
+      ectx.drawImage(videoEl, 0, 0, exportCanvas.width, exportCanvas.height);
+      requestAnimationFrame(drawFrameLoop);
+    };
+
+    requestAnimationFrame(drawFrameLoop);
+    setTimeout(stopExport, duration * 1000 + 3000); // hard timeout
+
+  } catch(err) {
+    msg.textContent = 'Video export failed: ' + err.message;
+    exportVideoLabel.textContent = '▼ EXPORT VIDEO';
+    exportVideoBtn.disabled = false;
+    console.error(err);
+  }
+}
+
+// ── RAW SAVE ──────────────────────────────────────────────
+async function saveRecording() {
+  if(!state.recordedBuffer) return;
+  try {
+    const wav=audioBufferToWav(state.recordedBuffer);
+    downloadFile(new Blob([wav],{type:'audio/wav'}),`tape_fm_raw_${timestamp()}.wav`);
+    showToast('▲ RAW TAKE SAVED ▲');
+  } catch(err) { showToast('SAVE FAILED'); }
+}
+
+// ── WAV ENCODER ───────────────────────────────────────────
+function audioBufferToWav(buffer) {
+  const nc=buffer.numberOfChannels,sr=buffer.sampleRate,len=buffer.length*nc*2+44;
+  const ab=new ArrayBuffer(len),view=new DataView(ab);
+  const ws=(off,s)=>{for(let i=0;i<s.length;i++)view.setUint8(off+i,s.charCodeAt(i));};
+  ws(0,'RIFF');view.setUint32(4,len-8,true);ws(8,'WAVE');ws(12,'fmt ');
+  view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,nc,true);
+  view.setUint32(24,sr,true);view.setUint32(28,sr*nc*2,true);view.setUint16(32,nc*2,true);view.setUint16(34,16,true);
+  ws(36,'data');view.setUint32(40,buffer.length*nc*2,true);
+  const chs=[];for(let c=0;c<nc;c++)chs.push(buffer.getChannelData(c));
+  let off=44;
+  for(let i=0;i<buffer.length;i++)for(let c=0;c<nc;c++){let s=Math.max(-1,Math.min(1,chs[c][i]));s=s<0?s*0x8000:s*0x7FFF;view.setInt16(off,s,true);off+=2;}
+  return ab;
+}
+
+function downloadFile(blob, name) {
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+function timestamp() { return new Date().toISOString().replace(/[:.]/g,'-').slice(0,19); }
+
+// ── KNOB INTERACTION ──────────────────────────────────────
+function formatVal(param, value) {
+  switch(param){
+    case 'pitch.semi': return(value>0?'+':'')+value;
+    case 'pitch.fine': return(value>0?'+':'')+Math.round(value);
+    case 'pitch.formant': return value.toFixed(2)+'x';
+    case 'dist.amount': case 'dist.tone': case 'radio.dist': return Math.round(value);
+    case 'dist.mix': case 'chorus.mix': case 'delay.mix': case 'reverb.mix': case 'reverb2.mix': case 'radio.mix': return Math.round(value*100)+'%';
+    case 'filter.cutoff': case 'radio.bandwidth': return Math.round(value);
+    case 'filter.q': return value.toFixed(1);
+    case 'filter.lfo': return value.toFixed(1);
+    case 'chorus.rate': return value.toFixed(2)+'Hz';
+    case 'chorus.depth': return Math.round(value*1000)+'ms';
+    case 'delay.time': return Math.round(value*1000)+'ms';
+    case 'delay.feedback': return Math.round(value*100)+'%';
+    case 'reverb.size': case 'reverb2.size': return value.toFixed(1)+'s';
+    case 'reverb.decay': case 'reverb2.decay': return value.toFixed(1);
+    case 'radio.crunch': return Math.round(value)+'bit';
+    case 'radio.static': return Math.round(value*100)+'%';
+    case 'radio.hum': return Math.round(value*100)+'%';
+    default: return value.toFixed(2);
+  }
+}
+
+// ── SHARED KNOB DRAG STATE ────────────────────────────────
+// Single global handler instead of N handlers per knob.
+// Dramatically reduces event listener count on mobile.
+let _activeKnob = null;
+
+window.addEventListener('mousemove', e => { if(_activeKnob) _activeKnob.onMove(e); });
+window.addEventListener('mouseup',   e => { if(_activeKnob) { _activeKnob.onUp(e); _activeKnob=null; } });
+window.addEventListener('touchmove', e => { if(_activeKnob) _activeKnob.onMove(e); }, {passive:false});
+window.addEventListener('touchend',  e => { if(_activeKnob) { _activeKnob.onUp(e); _activeKnob=null; } });
+
+function setParam(path, value) {
+  const[g,k]=path.split('.');
+  state.fx[g][k]=value;
+  updateLiveParam(path,value);
+}
+
+function setupKnob(el) {
+  const param=el.dataset.param,min=parseFloat(el.dataset.min),max=parseFloat(el.dataset.max);
+  const step=parseFloat(el.dataset.step),def=parseFloat(el.dataset.default),curve=el.dataset.curve;
+
+  // Build knob DOM: canvas for arc (GPU-composited, no layout cost),
+  // base + indicator on top.
+  el.innerHTML='<canvas class="knob-arc"></canvas><div class="knob-base"></div><div class="knob-indicator"></div>';
+  const arcCanvas=el.querySelector('.knob-arc');
+  const arcCtx=arcCanvas.getContext('2d');
+  const indicator=el.querySelector('.knob-indicator');
+  const valEl=el.parentElement.querySelector('.knob-val');
+
+  // Size the arc canvas to match the knob element
+  function sizeArc(){
+    const dpr=window.devicePixelRatio||1;
+    const sz=el.offsetWidth||54;
+    arcCanvas.width=Math.round((sz+12)*dpr);
+    arcCanvas.height=Math.round((sz+12)*dpr);
+    arcCanvas.style.width=(sz+12)+'px';
+    arcCanvas.style.height=(sz+12)+'px';
+    arcCanvas.style.position='absolute';
+    arcCanvas.style.top='-6px'; arcCanvas.style.left='-6px';
+    arcCanvas.style.pointerEvents='none';
+  }
+  sizeArc();
+
+  const vToN=v=>{
+    if(curve==='log'){const lo=Math.log(min),hi=Math.log(max);return(Math.log(Math.max(min,v))-lo)/(hi-lo);}
+    return(v-min)/(max-min);
+  };
+  const nToV=n=>{
+    n=Math.max(0,Math.min(1,n));
+    let v;
+    if(curve==='log'){const lo=Math.log(min),hi=Math.log(max);v=Math.exp(lo+n*(hi-lo));}
+    else{v=min+n*(max-min);}
+    if(step)v=Math.round(v/step)*step;
+    return Math.max(min,Math.min(max,v));
+  };
+
+  // Draw the arc on canvas — single path, GPU-accelerated, zero layout cost
+  function drawArc(norm){
+    const dpr=window.devicePixelRatio||1;
+    const w=arcCanvas.width, h=arcCanvas.height;
+    arcCtx.clearRect(0,0,w,h);
+    if(norm<=0) return;
+    const cx=w/2, cy=h/2, r=(w/2)-3*dpr;
+    const startAngle=(225*Math.PI)/180;
+    const endAngle=startAngle+norm*(270*Math.PI)/180;
+    arcCtx.beginPath();
+    arcCtx.arc(cx,cy,r,startAngle,endAngle);
+    arcCtx.strokeStyle='#ff1493';
+    arcCtx.lineWidth=3*dpr;
+    arcCtx.lineCap='round';
+    arcCtx.stroke();
+  }
+
+  let value=def;
+  let rafPending=false;
+
+  const apply=(immediate)=>{
+    const norm=Math.max(0,Math.min(1,vToN(value)));
+    // Always update indicator transform — cheap, compositor-only
+    indicator.style.transform=`translate(-50%,-100%) rotate(${-135+norm*270}deg)`;
+    // Draw arc on canvas — cheap
+    drawArc(norm);
+    // Throttle DOM text update to RAF to avoid forced layout on every touch move
+    if(immediate){
+      if(valEl) valEl.textContent=formatVal(param,value);
+      setParam(param,value);
+    } else {
+      setParam(param,value);
+      if(!rafPending){
+        rafPending=true;
+        requestAnimationFrame(()=>{
+          rafPending=false;
+          if(valEl) valEl.textContent=formatVal(param,value);
+        });
+      }
+    }
+  };
+  apply(true);
+
+  let startY=0,startVal=0,dragging=false,moved=false,lastTap=0;
+
+  const handler = {
+    onMove: (e) => {
+      const y=e.touches?e.touches[0].clientY:e.clientY,dy=startY-y;
+      if(Math.abs(dy)>3) moved=true;
+      value=nToV(vToN(startVal)+dy/200);
+      apply(false);
+      e.preventDefault();
+    },
+    onUp: () => {
+      if(!moved){
+        const now=Date.now();
+        if(now-lastTap<320){value=def;apply(true);lastTap=0;}
+        else{lastTap=now;}
+      }
+      dragging=false;
+    }
+  };
+
+  const onDown=e=>{
+    dragging=true; moved=false;
+    startY=e.touches?e.touches[0].clientY:e.clientY;
+    startVal=value;
+    _activeKnob=handler;
+    e.preventDefault();
+  };
+
+  el.addEventListener('mousedown',onDown);
+  el.addEventListener('touchstart',onDown,{passive:false});
+  el._setValue=v=>{value=Math.max(min,Math.min(max,v));apply(true);};
+}
+
+// ── FX MODULE SETUP ───────────────────────────────────────
+function setupFXModule(el) {
+  const fxName=el.dataset.fx;
+  el.querySelector('.fx-head').addEventListener('click',()=>{
+    state.fx[fxName].on=!state.fx[fxName].on;
+    el.classList.toggle('on',state.fx[fxName].on);
+    updateLiveToggle(fxName,state.fx[fxName].on);
+  });
+  el.querySelectorAll('.pill-row').forEach(row=>{
+    const param=row.dataset.paramGroup;
+    row.querySelectorAll('.pill').forEach(pill=>{
+      pill.addEventListener('click',()=>{
+        row.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+        pill.classList.add('active');
+        setParam(param,pill.dataset.val);
+      });
+    });
+  });
+  el.querySelectorAll('.knob').forEach(setupKnob);
+}
+
+// ── PRESETS ───────────────────────────────────────────────
+const PRESETS = {
+  dry:      { pitch:{on:false},dist:{on:false},filter:{on:false},radio:{on:false},chorus:{on:false},delay:{on:false},reverb:{on:false},reverb2:{on:false} },
+  vocal:    { pitch:{on:false},dist:{on:false},filter:{on:true,cutoff:12000,q:.7,lfo:0,type:'lowpass'},radio:{on:false},chorus:{on:true,rate:.8,depth:.003,mix:.25},delay:{on:false},reverb:{on:true,size:1.8,decay:1.8,mix:.25,preset:'plate'},reverb2:{on:false} },
+  lofi:     { pitch:{on:true,semi:-2,fine:0,formant:.92},dist:{on:true,amount:30,tone:2200,mix:.4},filter:{on:true,cutoff:4500,q:.7,lfo:0,type:'lowpass'},radio:{on:false},chorus:{on:true,rate:.6,depth:.008,mix:.4},delay:{on:false},reverb:{on:true,size:.9,decay:1.4,mix:.25,preset:'room'},reverb2:{on:false} },
+  cathedral:{ pitch:{on:false},dist:{on:false},filter:{on:false},radio:{on:false},chorus:{on:false},delay:{on:true,time:.5,feedback:.3,mix:.2},reverb:{on:true,size:5.5,decay:4.5,mix:.7,preset:'cathedral'},reverb2:{on:true,size:7,decay:5,mix:.3,preset:'hall'} },
+  robot:    { pitch:{on:true,semi:-7,fine:0,formant:.85},dist:{on:true,amount:60,tone:4000,mix:.6},filter:{on:true,cutoff:2200,q:8,lfo:4.5,type:'bandpass'},radio:{on:false},chorus:{on:false},delay:{on:true,time:.08,feedback:.45,mix:.3},reverb:{on:false},reverb2:{on:false} },
+  dreamy:   { pitch:{on:true,semi:7,fine:0,formant:1},dist:{on:false},filter:{on:true,cutoff:9000,q:.7,lfo:.4,type:'lowpass'},radio:{on:false},chorus:{on:true,rate:1.2,depth:.012,mix:.6},delay:{on:true,time:.42,feedback:.55,mix:.45},reverb:{on:true,size:4,decay:3.5,mix:.6,preset:'hall'},reverb2:{on:true,size:5,decay:4,mix:.25,preset:'cathedral'} },
+  phone:    { pitch:{on:false},dist:{on:true,amount:35,tone:2800,mix:.4},filter:{on:false},radio:{on:true,bandwidth:3000,crunch:10,static:.04,hum:.01,dist:20,mix:1},chorus:{on:false},delay:{on:false},reverb:{on:false},reverb2:{on:false} },
+  radio:    { pitch:{on:false},dist:{on:false},filter:{on:false},radio:{on:true,bandwidth:3200,crunch:9,static:.05,hum:.015,dist:15,mix:1},chorus:{on:false},delay:{on:false},reverb:{on:false},reverb2:{on:false} },
+  tape:     { pitch:{on:true,semi:0,fine:-8,formant:.97},dist:{on:true,amount:12,tone:5500,mix:.5},filter:{on:true,cutoff:8500,q:.7,lfo:.2,type:'lowpass'},radio:{on:false},chorus:{on:true,rate:.4,depth:.006,mix:.3},delay:{on:false},reverb:{on:true,size:1.2,decay:1.8,mix:.18,preset:'room'},reverb2:{on:false} },
+};
+
+function applyPreset(name) {
+  const p=PRESETS[name]||getUserPresets()[name];
+  if(!p) return;
+  // Capture radio state before applying — we need to know if it changes
+  const radioWasOn = state.fx.radio.on;
+  Object.keys(p).forEach(g=>Object.keys(p[g]).forEach(k=>{if(state.fx[g])state.fx[g][k]=p[g][k];}));
+  const radioNowOn = state.fx.radio.on;
+  // Sync UI
+  $$('.fx').forEach(fxEl=>{const g=fxEl.dataset.fx;if(state.fx[g])fxEl.classList.toggle('on',!!state.fx[g].on);});
+  $$('.knob').forEach(k=>{const[g,key]=k.dataset.param.split('.');if(state.fx[g]&&typeof state.fx[g][key]==='number'&&k._setValue)k._setValue(state.fx[g][key]);});
+  $$('.pill-row').forEach(row=>{const[g,key]=row.dataset.paramGroup.split('.');if(state.fx[g]){const val=state.fx[g][key];row.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));}});
+  if(state.isPlaying) {
+    if(radioWasOn !== radioNowOn) {
+      // Radio on/off changed — needs full graph rebuild
+      restartPlaybackGraph();
+    } else {
+      // No radio structural change — sync params in place
+      syncLiveGraphToState();
+    }
+  }
+}
+
+// ── USER PRESET STORAGE ───────────────────────────────────
+const STORAGE_KEY='tapefm_user_presets_v2';
+let _memPresets={};
+
+function getUserPresets(){try{const r=localStorage.getItem(STORAGE_KEY);return r?JSON.parse(r):{};}catch(e){return _memPresets;}}
+function saveUserPresets(obj){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));}catch(e){_memPresets=obj;}}
+function saveCurrentAsPreset(name){if(!name||!name.trim())return;const k=name.trim().toUpperCase();const all=getUserPresets();all[k]=JSON.parse(JSON.stringify(state.fx));saveUserPresets(all);renderUserPresets();showToast('▲ SAVED: '+k+' ▲');}
+function deleteUserPreset(key){const all=getUserPresets();delete all[key];saveUserPresets(all);renderUserPresets();showToast('DELETED: '+key);}
+
+function renderUserPresets() {
+  const list=$('#userPresetsList'), section=$('#userPresetsSection'), all=getUserPresets(), keys=Object.keys(all);
+  section.style.display=keys.length?'':'none';
+  list.innerHTML='';
+  keys.forEach(key=>{
+    const row=document.createElement('div');row.className='user-preset-row';
+    row.innerHTML=`<span class="user-preset-name">${key}</span><button class="user-preset-del">DEL</button>`;
+    row.querySelector('.user-preset-name').addEventListener('click',()=>{$$('#presets .preset').forEach(b=>b.classList.remove('active'));applyPreset(key);showToast('▶ '+key);});
+    row.querySelector('.user-preset-del').addEventListener('click',()=>deleteUserPreset(key));
+    list.appendChild(row);
+  });
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(text){toast.textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openSaveFxModal(){$('#presetNameInput').value='';$('#saveFxModal').classList.add('show');setTimeout(()=>$('#presetNameInput').focus(),100);}
+function closeSaveFxModal(){$('#saveFxModal').classList.remove('show');}
+
+// ── INIT ──────────────────────────────────────────────────
+function init() {
+  fitCanvas(); drawIdle(); updateTimeDisplay(0);
+
+  $$('.fx').forEach(setupFXModule);
+
+  // built-in presets
+  $$('#presets .preset').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      $$('#presets .preset').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      applyPreset(btn.dataset.preset);
+      msg.textContent=`Preset: ${btn.textContent}`;
+    });
+  });
+
+  // transport
+  recBtn.addEventListener('click',()=>{if(state.isRecording)stopRecording();else startRecording();});
+  playBtn.addEventListener('click',startPlayback);
+  stopBtn.addEventListener('click',handleStop);
+  clearBtn.addEventListener('click',clearRecording);
+  saveBtn.addEventListener('click',saveRecording);
+  downloadBtn.addEventListener('click',bounceToWav);
+  exportVideoBtn.addEventListener('click',exportVideo);
+
+  // file import
+  importBtn.addEventListener('click',()=>fileInput.click());
+  fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFileImport(e.target.files[0]);fileInput.value='';});
+
+  // save FX modal
+  $('#saveFxBtn').addEventListener('click',openSaveFxModal);
+  $('#saveFxClose').addEventListener('click',closeSaveFxModal);
+  $('#saveFxCancel').addEventListener('click',closeSaveFxModal);
+  $('#saveFxConfirm').addEventListener('click',()=>{const n=$('#presetNameInput').value.trim();if(n){saveCurrentAsPreset(n);closeSaveFxModal();}});
+  $('#presetNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#saveFxConfirm').click();if(e.key==='Escape')closeSaveFxModal();});
+  $('#saveFxModal').addEventListener('click',e=>{if(e.target===$('#saveFxModal'))closeSaveFxModal();});
+
+  // tap video preview to satisfy autoplay policy before export
+  videoPreview.addEventListener('click', () => {
+    videoEl.muted = true;
+    videoEl.play().then(() => { videoEl.pause(); videoEl.currentTime = 0; showToast('VIDEO UNLOCKED ▲'); }).catch(()=>{});
+  });
+
+  renderUserPresets();
+  $('[data-preset="dry"]').classList.add('active');
+}
+
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+</script>
+</body>
+</html>
